@@ -1,0 +1,16 @@
+### Starting build.
+# Target: gameloop.ml.depends, tags: { package(curses), bin_annot, debug, extension:ml, file:gameloop.ml, ocaml, ocamldep, quiet, traverse }
+ocamlfind ocamldep -package curses -modules gameloop.ml > gameloop.ml.depends
+# Target: gameboard.ml.depends, tags: { package(curses), bin_annot, debug, extension:ml, file:gameboard.ml, ocaml, ocamldep, quiet, traverse }
+ocamlfind ocamldep -package curses -modules gameboard.ml > gameboard.ml.depends # cached
+# Target: gameboard.cmo, tags: { package(curses), bin_annot, byte, compile, debug, extension:cmo, extension:ml, file:gameboard.cmo, file:gameboard.ml, implem, ocaml, quiet, traverse }
+ocamlfind ocamlc -c -g -bin-annot -package curses -o gameboard.cmo gameboard.ml # cached
+# Target: gameloop.cmo, tags: { package(curses), bin_annot, byte, compile, debug, extension:cmo, extension:ml, file:gameloop.cmo, file:gameloop.ml, implem, ocaml, quiet, traverse }
+ocamlfind ocamlc -c -g -bin-annot -package curses -o gameloop.cmo gameloop.ml
+# Target: gameboard.cmx, tags: { package(curses), bin_annot, compile, debug, extension:cmx, extension:ml, file:gameboard.cmx, file:gameboard.ml, implem, native, ocaml, quiet, traverse }
+ocamlfind ocamlopt -c -g -bin-annot -package curses -o gameboard.cmx gameboard.ml # cached
+# Target: gameloop.cmx, tags: { package(curses), bin_annot, compile, debug, extension:cmx, extension:ml, file:gameloop.cmx, file:gameloop.ml, implem, native, ocaml, quiet, traverse }
+ocamlfind ocamlopt -c -g -bin-annot -package curses -o gameloop.cmx gameloop.ml
+# Target: gameloop.native, tags: { package(curses), bin_annot, debug, dont_link_with, extension:native, file:gameloop.native, link, native, ocaml, program, quiet, traverse }
+ocamlfind ocamlopt -linkpkg -g -package curses gameboard.cmx gameloop.cmx -o gameloop.native
+# Compilation successful.
