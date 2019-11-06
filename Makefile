@@ -19,3 +19,6 @@ build:
 
 play: native 
 	./$(MAIN).native
+
+clean:
+	ocamlbuild -clean
