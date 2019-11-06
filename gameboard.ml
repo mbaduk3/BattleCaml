@@ -1,32 +1,40 @@
 (* This file will have all of the gameboard mechanics. *)
-type entry = Hit | Miss | Unhit | Empty
-
-exception No_Command
 
 type coord = (int * int)
+
+type entry = Hit | Miss | Unhit | Empty
 
 type t = entry Array.t array
 
 let init_matrix:t = Array.make_matrix 10 10 Empty
 
-let fire x:coord = x
+let get_coord_of_matrix (matrix:t) (x:coord) = matrix.(fst x).(snd x)
 
-let input_coordinates str = 
+let fire (x:coord) matrix = 
+  match get_coord_of_matrix matrix x with
+  | Empty -> matrix.(fst x).(snd x) <- Hit
+  | Hit -> print_string "You Already Hit This Place! Try Again!"; 
+  | Miss -> print_string "Miss!"
+  | Unhit -> matrix.(fst x).(snd x) <- Hit
+
+let input_coordinates str : coord = 
+let x = String.get str 1 in
+let y = String.get str 4 in 
+let int_x = Char.code x - 48 in 
+let int_y = Char.code y - 48 in
+(int_x, int_y)
 
 let head = function
   | [] -> ""
   | h::t -> h
 
-let unparse_fire = 
+let second_elt lst = List.nth lst 1
 
 let parse str = 
   let str' = String.split_on_char ' ' str in 
   let hd = head str' in
   match hd with
-  | "" -> raise No_Command
+  | "" -> raise (Invalid_argument "You Need to Pass in an Order!")
   | "quit" -> exit 0
-  | "fire" -> fire (1, 1)
-  | _ -> (0, 0)
-
-
-t
+  | "fire" -> fire (input_coordinates (second_elt str'))
+  | _ -> exit 0
