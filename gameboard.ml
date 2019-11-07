@@ -2,7 +2,7 @@
 
 type coord = (int * int)
 
-type entry = Miss | Unhit | Empty | Hit
+type entry = Hit | Miss | Unhit | Empty
 
 type t = entry Array.t array
 
@@ -12,6 +12,7 @@ type command = Fire of coord| Rotate | Hint | Quit
 
 exception Malformed
 
+exception Out_of_bounds
 
 (** For Array.make_matrix x y elt, we would read it as x rows of length y whose
   elements are elt
@@ -86,21 +87,21 @@ let fire (c:coord) matrix =
   match get_val_of_coord matrix c with
   | Empty -> matrix.(fst c).(snd c) <- Miss; matrix
   | Hit -> print_string "You Already Hit This Place! Try Again!"; matrix
-  | Miss -> print_string "Miss!"; matrix
+  | Miss -> print_string "You Already Missed There!"; matrix
   | Unhit -> matrix.(fst c).(snd c) <- Hit; matrix
 
-let input_coordinates str = 
-let x = String.get str 1 in
-let y = String.get str 4 in 
-let int_x = Char.code x - 48 in 
-let int_y = Char.code y - 48 in
-(new_mod int_x 10, new_mod int_y 10)
+let input_coordinates tup = 
+let int_x = Char.code (fst tup) - 48 in 
+let int_y = Char.code (snd tup) - 48 in
+(int_x, int_y)
 
 let head = function
   | [] -> ""
   | h::t -> h
 
 let second_elt lst = List.nth lst 1
+
+let third_elt lst = List.nth lst 2
 
 let string_of_tuple tup = 
   let x = fst tup in 
@@ -119,9 +120,16 @@ let parse str =
   let str' = String.split_on_char ' ' str in 
   let hd = head str' in
   match hd with
-  | "fire" -> if List.length str' = 1 then (raise Malformed) else Fire (input_coordinates (second_elt str'))
+  | "fire" -> let xcoord = int_of_string (second_elt str') in 
+              let ycoord = int_of_string (third_elt str') in
+              if 
+              List.length str' < 3 then (raise Malformed)
+              else if
+              xcoord > Array.length init_matrix || ycoord > Array.length init_matrix || xcoord < 1 || ycoord < 1
+              then raise Out_of_bounds
+              else
+              Fire (xcoord - 1, ycoord - 1)
   | "hint" -> Hint
   | "rotate" -> Rotate
-  | "" -> raise Malformed
   | "quit" -> Quit
   | _ -> raise Malformed
