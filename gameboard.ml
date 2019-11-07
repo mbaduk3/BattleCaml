@@ -12,10 +12,10 @@ let get_coord_of_matrix (matrix:t) (x:coord) = matrix.(fst x).(snd x)
 
 let fire (x:coord) matrix = 
   match get_coord_of_matrix matrix x with
-  | Empty -> matrix.(fst x).(snd x) <- Hit
-  | Hit -> print_string "You Already Hit This Place! Try Again!"; 
-  | Miss -> print_string "Miss!"
-  | Unhit -> matrix.(fst x).(snd x) <- Hit
+  | Empty -> matrix.(fst x).(snd x) <- Hit; matrix
+  | Hit -> print_string "You Already Hit This Place! Try Again!"; matrix
+  | Miss -> print_string "Miss!"; matrix
+  | Unhit -> matrix.(fst x).(snd x) <- Hit; matrix
 
 let input_coordinates str : coord = 
 let x = String.get str 1 in
@@ -38,3 +38,7 @@ let parse str =
   | "quit" -> exit 0
   | "fire" -> fire (input_coordinates (second_elt str'))
   | _ -> exit 0
+
+
+module Board = struct
+end
