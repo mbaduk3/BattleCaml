@@ -2,13 +2,16 @@
 
 type coord = (int * int)
 
-type entry = BoardHit | Miss | Unhit | Empty | ShipHit
+type entry = Miss | Unhit | Empty | Hit
 
 type t = entry Array.t array
 
 type ship = t
 
 type command = Fire of coord| Rotate | Hint | Quit
+
+exception Malformed
+
 
 (** For Array.make_matrix x y elt, we would read it as x rows of length y whose
   elements are elt
@@ -66,7 +69,8 @@ let demo_board =
   modify_matrix init_matrix caml_4 1;
   modify_matrix init_matrix caml_3 2;
   modify_matrix init_matrix caml_3' 3;
-  modify_matrix init_matrix caml_2 4
+  modify_matrix init_matrix caml_2 4;
+  init_matrix
 
 let win_condition matrix = matrix
 
@@ -76,23 +80,21 @@ let transpose matrix =
   Array.init (Array.length matrix.(0)) (fun i -> 
     Array.init (Array.length matrix) (fun j -> matrix.(j).(i)))
 
-(*if num > 0 then row.(num) <- arr.(num); change_row tl t (pred num); else change_row row ar*)
-
 let get_val_of_coord (matrix:t) (x:coord) = matrix.(fst x).(snd x)
 
 let fire (c:coord) matrix = 
   match get_val_of_coord matrix c with
-  | Empty -> matrix.(fst c).(snd c) <- BoardHit; matrix
-  | BoardHit | ShipHit -> print_string "You Already Hit This Place! Try Again!"; matrix
+  | Empty -> matrix.(fst c).(snd c) <- Miss; matrix
+  | Hit -> print_string "You Already Hit This Place! Try Again!"; matrix
   | Miss -> print_string "Miss!"; matrix
-  | Unhit -> matrix.(fst c).(snd c) <- ShipHit; matrix
+  | Unhit -> matrix.(fst c).(snd c) <- Hit; matrix
 
-let input_coordinates str : coord = 
+let input_coordinates str = 
 let x = String.get str 1 in
 let y = String.get str 4 in 
 let int_x = Char.code x - 48 in 
 let int_y = Char.code y - 48 in
-(int_x, int_y)
+(new_mod int_x 10, new_mod int_y 10)
 
 let head = function
   | [] -> ""
@@ -117,12 +119,9 @@ let parse str =
   let str' = String.split_on_char ' ' str in 
   let hd = head str' in
   match hd with
-  | "fire" -> Fire (input_coordinates (second_elt str'))
+  | "fire" -> if List.length str' = 1 then (raise Malformed) else Fire (input_coordinates (second_elt str'))
   | "hint" -> Hint
   | "rotate" -> Rotate
-  | "" | "quit" | _ -> Quit
-
-
-module Board = struct
-  
-end
+  | "" -> raise Malformed
+  | "quit" -> Quit
+  | _ -> raise Malformed
