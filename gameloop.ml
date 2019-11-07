@@ -1,6 +1,7 @@
 open Gameboard
 
 let rec play_game board = 
+  format board;
   print_string "> ";
   parse (read_line ()) board |> play_game
 

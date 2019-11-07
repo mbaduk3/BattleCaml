@@ -10,6 +10,13 @@ let init_matrix:t = Array.make_matrix 10 10 Empty
 
 let get_coord_of_matrix (matrix:t) (x:coord) = matrix.(fst x).(snd x)
 
+let string_of_entry e = 
+  match e with 
+  | Hit -> "H"
+  | Miss -> "M" 
+  | Unhit -> "." 
+  | Empty -> "." 
+
 let fire (x:coord) matrix = 
   match get_coord_of_matrix matrix x with
   | Empty -> matrix.(fst x).(snd x) <- Hit; matrix
@@ -39,6 +46,12 @@ let parse str =
   | "fire" -> fire (input_coordinates (second_elt str'))
   | _ -> exit 0
 
+let format_row (row: entry array) = 
+  Array.iter (fun elem -> print_string (string_of_entry elem)) row;
+  print_string "\n"
+
+let format (board:t) = 
+  Array.iter format_row board
 
 module Board = struct
 end
