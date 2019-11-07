@@ -1,0 +1,6 @@
+B _build
+PKG curses
+PKG ansiterminal
+PKG str
+PKG unix
+PKG ocamlbuild

@@ -1,1 +1,1 @@
-true: package(curses), debug
+true: package(curses), package(ANSITerminal), debug
