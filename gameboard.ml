@@ -8,23 +8,28 @@ type t = entry Array.t array
 
 type ship = t
 
-type command = Fire of coord| Rotate | Hint | Quit
+type response =  Contact of t | No_contact of t | 
+                 Already_hit of t | Already_miss of t | Misc
 
-exception Malformed
+exception Malformed 
+exception Out_of_bounds 
 
-exception Out_of_bounds
+(* Note to self: 
+   For Array.make_matrix x y elt, we would read it as x rows of length y whose
+   elements are elt.
+   Array.(i).(j) gives the val at row i, column j *)
 
-(** For Array.make_matrix x y elt, we would read it as x rows of length y whose
-  elements are elt
-  Array.(i).(j) gives the val at row i, column j *)
-
+(* A 10x10 board of Empty values *)
 let init_matrix:t = Array.make_matrix 10 10 Empty
 
+(* Returns the 0-based index of [elem] in the list [lst] *)
 let rec index lst elem acc = 
   match lst with
   | [] -> acc
   | h::t -> if h = elem then acc else index t elem (succ acc)
 
+(* [get_array_from i j] is a copy of [arr], but indexed from [i] to 
+   [j]-non-inclusive. *)
 let get_array_from i j arr = 
   let lst = Array.to_list arr in 
   let rec array_match i j lst acc num = 
@@ -35,24 +40,19 @@ let get_array_from i j arr =
               else array_match i j t acc (succ num)) in
   Array.of_list (array_match i j lst [] 0)
 
-(*let set_ship_name = print_string "/nWhat Would You Like To Name Your Ship? /n";
-  read_line () *)
-
 (** A ship will always have 1 or n elements in the matrix. 1 if horizontal. n if vertical*)
 
+(* Creates a new "ship" Board of Unhit elements of length [len]. *)
 let create_ship len : t = Array.make_matrix 1 len Unhit
 
+(* The standard game ship suite *)
 let caml_5 = create_ship 5
-
 let caml_4 = create_ship 4
-
 let caml_3 = create_ship 3
-
 let caml_3' = create_ship 3
-
 let caml_2 = create_ship 2
 
-<<<<<<< HEAD
+(* The single-character representation of Entry [e]. *)
 let string_of_entry e = 
   match e with 
   | Hit -> "H"
@@ -60,16 +60,15 @@ let string_of_entry e =
   | Unhit -> "." 
   | Empty -> "." 
 
-let fire (x:coord) matrix = 
-  match get_coord_of_matrix matrix x with
-  | Empty -> matrix.(fst x).(snd x) <- Hit; matrix
-=======
+(* Returns n % m, handling negative numbers *)
 let new_mod n m = (n + m) mod m
 
-let get_row matrix num = matrix.(num)
+(* Returns the row at index [num] in matrix [m] *)
+let get_row m num = m.(num)
 
-(*Changes the given [row] to the [arr] within the specified range [i] to [j] (j not inclusive). 
-The range must equal the length of [arr]. This allows you to modify a row in 0..n-1 *)
+(* Changes the given [row] to the [arr] within the specified range [i] to [j] 
+   (j not inclusive). The range must equal the length of [arr]. This allows you 
+   to modify a row in 0..n-1 *)
 let modify_matrix matrix ship num = 
   for i = 0 to Array.length ship - 1 do
     for j = 0 to (Array.length ship.(0)) - 1 do 
@@ -85,35 +84,25 @@ let demo_board =
   modify_matrix init_matrix caml_2 4;
   init_matrix
 
-let win_condition matrix = matrix
+(* Returns a new matrix where the rows of [m] become the columns of 
+   [transpose m] *)
+let transpose m = 
+  Array.init (Array.length m.(0)) (fun i -> 
+    Array.init (Array.length m) (fun j -> m.(j).(i)))
 
-(*[transpose matrix] returns a new [matrix] where the rows of the [matrix] become
-  the columns. This is to be used for rotations of ships*)
-let transpose matrix = 
-  Array.init (Array.length matrix.(0)) (fun i -> 
-    Array.init (Array.length matrix) (fun j -> matrix.(j).(i)))
+(* Returns the value at the x, y coordinates contained in [c], of matrix [m] *)
+let get_val_of_coord (m:t) (c:coord) = m.(fst c).(snd c)
 
-let get_val_of_coord (matrix:t) (x:coord) = matrix.(fst x).(snd x)
-
-let fire (c:coord) matrix = 
-  match get_val_of_coord matrix c with
-  | Empty -> matrix.(fst c).(snd c) <- Miss; matrix
->>>>>>> Board
-  | Hit -> print_string "You Already Hit This Place! Try Again!"; matrix
-  | Miss -> print_string "You Already Missed There!"; matrix
-  | Unhit -> matrix.(fst c).(snd c) <- Hit; matrix
-
-let input_coordinates tup = 
-let int_x = Char.code (fst tup) - 48 in 
-let int_y = Char.code (snd tup) - 48 in
-(int_x, int_y)
-
-let head = function
-  | [] -> ""
-  | h::t -> h
+(* Changes the board [m] based on the entry value at coordinates [c]. Returns 
+   a response type containing the new board [fire c m]. *)
+let fire (c:coord) m = 
+  match get_val_of_coord m c with
+  | Empty -> m.(fst c).(snd c) <- Miss; No_contact m
+  | Hit ->  Already_hit m
+  | Miss -> Already_miss m
+  | Unhit -> m.(fst c).(snd c) <- Hit; Contact m
 
 let second_elt lst = List.nth lst 1
-
 let third_elt lst = List.nth lst 2
 
 let string_of_tuple tup = 
@@ -129,29 +118,12 @@ let give_hint matrix =
         print_string "\nCouldn't Find Anything For You. Just Keep Firing!\n"
   done
 
-let parse str = 
-  let str' = String.split_on_char ' ' str in 
-  match head str' with 
-  | "fire" -> 
-    if List.length str' < 3 then (raise Malformed)
-    else 
-      let xcoord = int_of_string (second_elt str') in 
-      let ycoord = int_of_string (third_elt str') in
-      let dim = Array.length init_matrix in 
-      if xcoord > dim || ycoord > dim || 
-         xcoord < 1 || ycoord < 1 then raise Out_of_bounds 
-      else
-        Fire (xcoord - 1, ycoord - 1)
-  | "hint" -> Hint
-  | "rotate" -> Rotate
-  | "quit" -> Quit
-  | _ -> raise Malformed
-
 let format_row (row: entry array) = 
   Array.iter (fun elem -> print_string (string_of_entry elem)) row;
   print_string "\n"
 
 let format (board:t) = 
+  print_string "\n";
   Array.iter format_row board
 
 
