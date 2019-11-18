@@ -1,6 +1,6 @@
-<<<<<<< HEAD
 open Gameboard
 open Display
+open Command
 
 (* type command = Fire of coord | Retry | Quit (*| Rotate | Hint |*)
 
@@ -45,11 +45,27 @@ let clean_input str board =
     parse str board 
   with 
     | Malformed -> print_string "Malformed command"; Retry 
-    | Out_of_bounds -> print_string "Coordinates are out of bounds!"; Retry
+    | Out_of_bounds -> print_string "Coor
+    
+    dinates are out of bounds!"; Retry
 *)
+(* 
+let handle_input win = 
+  match get_key win with 
+    | Down -> 
+    | Up -> 
+    | Left -> 
+    | Right -> 
+    | Fire -> let (y1, x1) = getyx win in moveto win x1 y1
+    | Rotate -> true
+    | Quit -> endwin (); exit 0
+    | Save -> false
+    | Other -> false *)
+
 
 let rec play_game b = 
     render b;
+    (* handle_input Display.b_win; *)
     play_game b
   
 let main () = 
@@ -57,7 +73,8 @@ let main () =
   play_game demo_board
 
 let () = main ()
-=======
+
+(*
 open Curses
 
 exception Invalid_input
@@ -135,4 +152,4 @@ let rec run win =
   done;
   endwin ();
   exit 0
->>>>>>> origin/command
+  *)

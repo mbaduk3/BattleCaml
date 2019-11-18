@@ -11,7 +11,7 @@ let start_y win = ref (fst (getyx win))
 
 let no_delay = nodelay scr true *)
 
-let key_inputs win = 
+let get_key win = 
   match char_of_int (wgetch win) with
   | 'S' | 's' -> Down 
   | 'W' | 'w' -> Up
