@@ -50,7 +50,6 @@ let render b =
     (*Curses.box !scr 0 0;*)
     Curses.box !b_win 0 0;
     render_board b !b_win;
-    (* Curses.mvwaddch !b_win 10 10 empty_ch; *)
     Curses.wrefresh !b_win
     (*ignore(Curses.refresh ())*)
 
