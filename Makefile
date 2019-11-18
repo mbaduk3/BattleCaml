@@ -1,4 +1,4 @@
-MODULES=gameboard gameloop authors
+MODULES=gameboard gameloop authors display
 OBJECTS=$(MODULES:=.cmo)
 MLS=$(MODULES:=.ml)
 MLIS=$(MODULES:=.mli)
@@ -18,7 +18,7 @@ build:
 	$(OCAMLBUILD) $(OBJECTS)
 
 zip: build
-	zip battlecaml_src.zip *.ml* _tags Makefile report/*
+	zip battlecaml_src.zip *.ml* _tags Makefile INSTALL.md
 
 play: native 
 	./$(MAIN).native

@@ -1,6 +1,7 @@
 open Gameboard
+open Display
 
-type command = Fire of coord | Retry | Quit (*| Rotate | Hint |*)
+(* type command = Fire of coord | Retry | Quit (*| Rotate | Hint |*)
 
 let execute_command cmd b = 
   let exec c b = 
@@ -44,19 +45,14 @@ let clean_input str board =
   with 
     | Malformed -> print_string "Malformed command"; Retry 
     | Out_of_bounds -> print_string "Coordinates are out of bounds!"; Retry
+*)
 
-let rec play_game board = 
-  format board;
-  print_string "> ";
-  let cmd = clean_input (read_line ()) board in 
-  let b' = execute_command cmd board in 
-  play_game b'
-
+let rec play_game b = 
+    render b;
+    play_game b
+  
 let main () = 
-  ANSITerminal.(print_string [blue]
-                  "\n\nWelcome to BattlCaml.\n");
-  print_endline "Please enter your first command.\n";
-  print_string  "> ";
+  print_string "Welcome!";
   play_game demo_board
 
 let () = main ()
