@@ -78,9 +78,11 @@ let handle_input win b =
 
 
 let rec play_game b = 
+  try
     render b;
     let b' = handle_input !Display.b_win b in
     play_game b'
+  with e -> exit 0
   
 let main () = 
   print_string "Welcome!";
