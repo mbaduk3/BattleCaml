@@ -67,8 +67,8 @@ let handle_input win b =
     | Left -> crosshair_x := !crosshair_x - 1; b
     | Right -> crosshair_x := !crosshair_x + 1; b
     | Fire -> handle_fire win b
+    | Quit -> exit_display (); b
     (* | Rotate -> true
-    | Quit -> endwin (); exit 0
     | Save -> false
     | Other -> false *)
 

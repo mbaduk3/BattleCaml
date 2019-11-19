@@ -61,6 +61,9 @@ let render b =
     Curses.wrefresh !b_win
     (*ignore(Curses.refresh ())*)
 
+let exit_display () = 
+    endwin (); exit 0
+
 
 
 
