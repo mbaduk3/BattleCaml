@@ -8,7 +8,7 @@ let b_win = ref (newwin 12 12 1 10)
 let cur_x = ref 1
 let cur_y = ref 1
 let crosshair_x = ref 1
-let corsshair_y = ref 1
+let crosshair_y = ref 1
 
 let hit_ch = int_of_char 'X'
 let miss_ch = int_of_char '0'
@@ -29,7 +29,7 @@ let render_board b win =
     for i = 0 to Array.length b - 1 do 
         for j = 0 to (Array.length b.(0) - 1) do 
             begin
-                if (!cur_x = !crosshair_x && !cur_y = !crosshair_x) then 
+                if (!cur_x = !crosshair_x && !cur_y = !crosshair_y) then 
                     ignore(wattron win Curses.WA.standout);
                 match b.(i).(j) with 
                 | Hit -> 

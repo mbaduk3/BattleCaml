@@ -49,14 +49,14 @@ let clean_input str board =
     
     dinates are out of bounds!"; Retry
 *)
-(* 
+
 let handle_input win = 
   match get_key win with 
-    | Down -> 
-    | Up -> 
-    | Left -> 
-    | Right -> 
-    | Fire -> let (y1, x1) = getyx win in moveto win x1 y1
+    | Down -> crosshair_y := !crosshair_y + 1
+    | Up -> crosshair_y := !crosshair_y - 1
+    | Left -> crosshair_x := !crosshair_x - 1
+    | Right -> crosshair_x := !crosshair_x + 1
+    (* | Fire -> let (y1, x1) = getyx win in moveto win x1 y1
     | Rotate -> true
     | Quit -> endwin (); exit 0
     | Save -> false
@@ -65,7 +65,7 @@ let handle_input win =
 
 let rec play_game b = 
     render b;
-    (* handle_input Display.b_win; *)
+    handle_input !Display.b_win;
     play_game b
   
 let main () = 
