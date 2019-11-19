@@ -3,7 +3,8 @@ open Gameboard
 
 let scr = ref (initscr ());
 ignore(Curses.cbreak ());
-ignore(Curses.noecho ())
+ignore(Curses.noecho ());
+ignore(Curses.curs_set 0)
 let b_win = ref (newwin 12 12 1 10)
 let cur_x = ref 1
 let cur_y = ref 1
@@ -23,7 +24,7 @@ let incr_cur b =
     else if (!cur_y > Array.length b) then 
         cur_y := 1
 
-let render_board b win = 
+let render_board b win =
     cur_x := 1;
     cur_y := 1;
     for i = 0 to Array.length b - 1 do 
@@ -59,6 +60,7 @@ let render b =
     render_board b !b_win;
     Curses.wrefresh !b_win
     (*ignore(Curses.refresh ())*)
+
 
 
 

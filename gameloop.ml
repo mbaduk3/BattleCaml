@@ -50,14 +50,24 @@ let clean_input str board =
     dinates are out of bounds!"; Retry
 *)
 
-let handle_input win = 
+(* Change later to display responsive results *)
+let handle_fire win b = 
+  let (x, y) = (!crosshair_y - 1, !crosshair_x - 1) in
+  let res = Gameboard.fire (x, y) b in
+  match res with 
+    | No_contact m -> m
+    | Already_hit m -> m 
+    | Already_miss m -> m 
+    | Contact m -> m
+
+let handle_input win b = 
   match get_key win with 
-    | Down -> crosshair_y := !crosshair_y + 1
-    | Up -> crosshair_y := !crosshair_y - 1
-    | Left -> crosshair_x := !crosshair_x - 1
-    | Right -> crosshair_x := !crosshair_x + 1
-    (* | Fire -> let (y1, x1) = getyx win in moveto win x1 y1
-    | Rotate -> true
+    | Down -> crosshair_y := !crosshair_y + 1; b
+    | Up -> crosshair_y := !crosshair_y - 1; b
+    | Left -> crosshair_x := !crosshair_x - 1; b
+    | Right -> crosshair_x := !crosshair_x + 1; b
+    | Fire -> handle_fire win b
+    (* | Rotate -> true
     | Quit -> endwin (); exit 0
     | Save -> false
     | Other -> false *)
@@ -65,8 +75,8 @@ let handle_input win =
 
 let rec play_game b = 
     render b;
-    handle_input !Display.b_win;
-    play_game b
+    let b' = handle_input !Display.b_win b in
+    play_game b'
   
 let main () = 
   print_string "Welcome!";
