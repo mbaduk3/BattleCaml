@@ -4,14 +4,14 @@ open Command
 
 (* type command = Fire of coord | Retry | Quit (*| Rotate | Hint |*)
 
-let execute_command cmd b = 
-  let exec c b = 
+   let execute_command cmd b = 
+   let exec c b = 
     match c with 
     | Fire c -> fire c b
     | Retry -> Misc 
     | Quit -> exit 0; 
-  in 
-  match exec cmd b with
+   in 
+   match exec cmd b with
     | Contact b' -> print_string "You hit! Shoot again"; b' 
     | No_contact b' -> print_string "You missed...Try again"; b' 
     | Already_hit b' -> print_string "You already hit there!"; b' 
@@ -19,15 +19,15 @@ let execute_command cmd b =
     | Misc -> b
 
 
-let head = function
-  | [] -> ""
-  | h::t -> h
+   let head = function
+   | [] -> ""
+   | h::t -> h
 
-(* Returns a command based on the contents of [str] *)
-let parse str board = 
-  let str' = String.split_on_char ' ' str in 
-  match head str' with 
-  | "fire" -> 
+   (* Returns a command based on the contents of [str] *)
+   let parse str board = 
+   let str' = String.split_on_char ' ' str in 
+   match head str' with 
+   | "fire" -> 
     if List.length str' < 3 then (raise Malformed)
     else 
       let xcoord = int_of_string (second_elt str') in 
@@ -37,16 +37,16 @@ let parse str board =
          xcoord < 1 || ycoord < 1 then raise Out_of_bounds 
       else
         Fire (xcoord - 1, ycoord - 1)
-  | "quit" -> Quit
-  | _ -> raise Malformed
+   | "quit" -> Quit
+   | _ -> raise Malformed
 
-let clean_input str board = 
-  try 
+   let clean_input str board = 
+   try 
     parse str board 
-  with 
+   with 
     | Malformed -> print_string "Malformed command"; Retry 
     | Out_of_bounds -> print_string "Coor
-    
+
     dinates are out of bounds!"; Retry
 *)
 
@@ -55,32 +55,53 @@ let handle_fire win b =
   let (x, y) = (!crosshair_y - 1, !crosshair_x - 1) in
   let res = Gameboard.fire (x, y) b in
   match res with 
-    | No_contact m -> m
-    | Already_hit m -> m 
-    | Already_miss m -> m 
-    | Contact m -> m
+  | No_contact m -> m
+  | Already_hit m -> m 
+  | Already_miss m -> m 
+  | Contact m -> m
+  | _ -> failwith "Unimplemented"
 
 let handle_input win b = 
   match get_key win with 
-    | Down -> crosshair_y := !crosshair_y + 1; b
-    | Up -> crosshair_y := !crosshair_y - 1; b
-    | Left -> crosshair_x := !crosshair_x - 1; b
-    | Right -> crosshair_x := !crosshair_x + 1; b
-    | Fire -> handle_fire win b
-    | Quit -> exit_display (); b
-    (* | Rotate -> true
-    | Save -> false
-    | Other -> false *)
+  | Down -> crosshair_y := !crosshair_y + 1; b
+  | Up -> crosshair_y := !crosshair_y - 1; b
+  | Left -> crosshair_x := !crosshair_x - 1; b
+  | Right -> crosshair_x := !crosshair_x + 1; b
+  | Fire -> handle_fire win b
+  | Quit -> exit_display (); b
+  | _ -> failwith "Unimplemented"
+(* | Rotate -> true
+   | Save -> false
+   | Other -> false *)
 
+let place_ship matrix ship x y = 
+  for i = 0 to ((Array.length (List.nth ships ship)) - 1) do 
+    matrix.(y - 1).(x + i - 1) <- (List.nth ships ship).(i)
+  done
 
-let rec play_game b = 
-    render b;
-    let b' = handle_input !Display.b_win b in
-    play_game b'
-  
+let rec handle_placement win b ship =
+  match get_key win with
+  | Down -> crosshair_y := !crosshair_y + 1; (b, ship)
+  | Up -> crosshair_y := !crosshair_y - 1; (b, ship)
+  | Left -> crosshair_x := !crosshair_x - 1; (b, ship)
+  | Right -> crosshair_x := !crosshair_x + 1; (b, ship)
+  | Place -> begin try place_ship b ship !crosshair_x !crosshair_y with
+        _ -> play_game demo_board end; (b, ship + 1)
+  | _ -> failwith "Unimplemented"
+
+and place_ships (b, i) =
+  render b;
+  let (b', i') = handle_placement !Display.b_win b i in
+  place_ships (b', i')
+
+and play_game b = 
+  render b;
+  let b' = handle_input !Display.b_win b in
+  play_game b'
+
 let main () = 
   print_string "Welcome!";
-  play_game demo_board
+  place_ships (demo_board, 0)
 
 let () = main ()
 
