@@ -1,7 +1,6 @@
 open Gameboard
 open Display
 open Command
-open Sys
 
 (* Reference to the counter for the number of ships placed in placement phase *)
 let ship_i = ref 0
@@ -37,15 +36,21 @@ let rec handle_placement win b =
 let handle_input win b = 
   match get_key win with
     | Down -> if !crosshair_y < 10 then incr crosshair_y 
-              else crosshair_y := 1; b
+              else crosshair_y := 1;
+              cur_timer := 0.; b
     | Up -> if !crosshair_y > 1 then decr crosshair_y
-            else crosshair_y := 10; b
+            else crosshair_y := 10;
+            cur_timer := 0.; b
     | Left -> if !crosshair_x > 1 then decr crosshair_x
-              else crosshair_x := 10; b
+              else crosshair_x := 10;
+              cur_timer := 0.; b
     | Right -> if !crosshair_x < 10 then incr crosshair_x
-                else crosshair_x := 1; b
-    | Fire -> handle_fire win b
-    | Place -> handle_placement win b; b
+                else crosshair_x := 1;
+                cur_timer := 0.; b
+    | Fire -> cur_timer := 0.;
+              handle_fire win b
+    | Place -> cur_timer := 0.;
+               handle_placement win b; b
     | Quit -> exit_display (); b
     | _ -> b
 

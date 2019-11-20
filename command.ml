@@ -4,9 +4,7 @@ type command = | Place | Fire | Rotate | Quit
                | Save | Up | Down | Left | Right 
                | Other
 
-(* let key_pad = keypad scr true
-
-   let no_delay = nodelay scr true *)
+(* let key_pad = keypad scr true *)
 
 let get_key win = 
   try

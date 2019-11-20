@@ -1,11 +1,15 @@
 open Curses
 open Gameboard
 
-let scr = ref (initscr ());
+let scr = ref (initscr ())
+let () = 
   ignore(Curses.cbreak ());
   ignore(Curses.noecho ());
-  ignore(Curses.curs_set 0)
+  ignore(Curses.curs_set 0); 
+  ignore(Curses.nodelay !scr true)
 let b_win = ref (newwin 12 12 1 10)
+let () = 
+  ignore(Curses.nodelay !b_win true)
 let cur_x = ref 1
 let cur_y = ref 1
 let crosshair_x = ref 1
@@ -16,7 +20,7 @@ let miss_ch = int_of_char '0'
 let unhit_ch = int_of_char '~'
 let empty_ch = int_of_char '.'
 
-let col_timer = ref 0. 
+let cur_timer = ref 0. 
 
 let incr_cur b = 
   cur_x := !cur_x + 1;
@@ -29,14 +33,24 @@ let incr_cur b =
 let render_board b win dt =
   cur_x := 1;
   cur_y := 1;
-  col_timer := !col_timer +. dt;
-  if (!col_timer > 5.) then exit 0 
-  else 
+  cur_timer := !cur_timer +. dt;
   for i = 0 to Array.length b - 1 do 
     for j = 0 to (Array.length b.(0) - 1) do 
       begin
-        if (!cur_x = !crosshair_x && !cur_y = !crosshair_y) then 
-          ignore(wattron win Curses.WA.standout);
+        if (!cur_x = !crosshair_x && !cur_y = !crosshair_y) then
+          begin
+          if (1000. *. !cur_timer < 3.) then 
+            begin
+            ignore(wattroff win Curses.WA.protect);
+            ignore(wattron win Curses.WA.standout)
+            end;
+          if (1000. *. !cur_timer > 5.) then 
+            begin
+            ignore(wattr_off win Curses.WA.standout);
+            ignore(cur_timer := 0.);
+            ignore(wattron win Curses.WA.protect)
+            end
+          end;
         match b.(i).(j) with 
         | Hit -> 
           ignore(Curses.mvwaddch win !cur_y !cur_x hit_ch); 
@@ -57,6 +71,8 @@ let render_board b win dt =
       end
     done
   done
+  (* Use to render cur_time:
+     ignore(mvwaddstr win 9 1 (string_of_float !cur_timer)) *)
 
 let render b dt = 
   (*Curses.erase ();*)
