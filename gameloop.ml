@@ -26,14 +26,20 @@ let place_ship matrix ship x y =
   done
 
 let rec handle_placement win b =
-  if (!ship_i < 5) then 
-    begin
-      place_ship b !ship_i !crosshair_x !crosshair_y; 
-      incr ship_i
-    end
-  else 
-    (* TODO: include useful error message: "You have placed all the ships!" *)
-    ()
+  try
+    if (!ship_i < 5) then 
+      begin
+        place_ship b !ship_i (!crosshair_x) !crosshair_y; 
+        incr ship_i
+      end
+      else 
+      (* TODO: include useful error message: "You have placed all the ships!" *)
+      ()
+  with 
+    | Invalid_argument e -> 
+        (*TODO: error message: "ship is out of bounds"*)
+        incr ship_i;
+        ()
 
 let handle_input win b = 
   match get_key win with

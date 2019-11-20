@@ -7,7 +7,7 @@ let () =
   ignore(Curses.noecho ());
   ignore(Curses.curs_set 0); 
   ignore(Curses.nodelay !scr true)
-let b_win = ref (newwin 12 12 1 10)
+let b_win = ref (newwin 12 (12 * 2 - 1) 1 10)
 let () = 
   ignore(Curses.nodelay !b_win true)
 let cur_x = ref 1
@@ -53,19 +53,19 @@ let render_board b win dt =
           end;
         match b.(i).(j) with 
         | Hit -> 
-          ignore(Curses.mvwaddch win !cur_y !cur_x hit_ch); 
+          ignore(Curses.mvwaddch win !cur_y (!cur_x*2) hit_ch); 
           incr_cur b;
           ignore(wattroff win Curses.WA.standout)
         | Miss -> 
-          ignore(Curses.mvwaddch win !cur_y !cur_x miss_ch);
+          ignore(Curses.mvwaddch win !cur_y (!cur_x*2) miss_ch);
           incr_cur b;
           ignore(wattroff win Curses.WA.standout)
         | Unhit -> 
-          ignore(Curses.mvwaddch win !cur_y !cur_x unhit_ch);
+          ignore(Curses.mvwaddch win !cur_y (!cur_x*2) unhit_ch);
           incr_cur b;
           ignore(wattroff win Curses.WA.standout)
         | _ -> 
-          ignore(Curses.mvwaddch win !cur_y !cur_x empty_ch);
+          ignore(Curses.mvwaddch win !cur_y (!cur_x*2) empty_ch);
           incr_cur b;
           ignore(wattroff win Curses.WA.standout)
       end
@@ -75,13 +75,10 @@ let render_board b win dt =
      ignore(mvwaddstr win 9 1 (string_of_float !cur_timer)) *)
 
 let render b dt = 
-  (*Curses.erase ();*)
-  (*Curses.box !scr 0 0;*)
   Curses.box !b_win 0 0;
   render_board b !b_win dt;
   Curses.wrefresh !b_win;
   Unix.gettimeofday ()
-(*ignore(Curses.refresh ())*)
 
 let exit_display () = 
   endwin (); exit 0
