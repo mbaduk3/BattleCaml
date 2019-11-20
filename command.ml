@@ -1,11 +1,8 @@
 open Curses
 
-type command = Place | Fire | Rotate | Quit | Save | Up | Down | Left | Right | Other
-
-let width = 10
-let height = 10
-let start_x win = ref (snd (getyx win))
-let start_y win = ref (fst (getyx win))
+type command = | Place | Fire | Rotate | Quit 
+               | Save | Up | Down | Left | Right 
+               | Other
 
 (* let key_pad = keypad scr true
 

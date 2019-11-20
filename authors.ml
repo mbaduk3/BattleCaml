@@ -1,2 +1,2 @@
 (* Authors: Maxim Baduk, Alex Vaziri, Brandon Hong *)
-let hours_worked = [5; 5; 5]
+let hours_worked = [18; 18; 18]
