@@ -34,16 +34,16 @@ let get_array_from i j arr =
   let lst = Array.to_list arr in 
   let rec array_match i j lst acc num = 
     (match lst with
-    | [] -> acc
-    | h::t -> if num >= i && num < j 
-              then array_match i j t (acc@[h]) (succ num) 
-              else array_match i j t acc (succ num)) in
+     | [] -> acc
+     | h::t -> if num >= i && num < j 
+       then array_match i j t (acc@[h]) (succ num) 
+       else array_match i j t acc (succ num)) in
   Array.of_list (array_match i j lst [] 0)
 
 (** A ship will always have 1 or n elements in the matrix. 1 if horizontal. n if vertical*)
 
 (* Creates a new "ship" Board of Unhit elements of length [len]. *)
-let create_ship len : t = Array.make_matrix 1 len Unhit
+let create_ship len = Array.make len Unhit
 
 (* The standard game ship suite *)
 let caml_5 = create_ship 5
@@ -51,6 +51,8 @@ let caml_4 = create_ship 4
 let caml_3 = create_ship 3
 let caml_3' = create_ship 3
 let caml_2 = create_ship 2
+
+let ships = caml_5 :: caml_4 :: caml_3 :: caml_3' :: caml_2 :: []
 
 (* The single-character representation of Entry [e]. *)
 let string_of_entry e = 
@@ -66,29 +68,14 @@ let new_mod n m = (n + m) mod m
 (* Returns the row at index [num] in matrix [m] *)
 let get_row m num = m.(num)
 
-(* Changes the given [row] to the [arr] within the specified range [i] to [j] 
-   (j not inclusive). The range must equal the length of [arr]. This allows you 
-   to modify a row in 0..n-1 *)
-let modify_matrix matrix ship num = 
-  for i = 0 to Array.length ship - 1 do
-    for j = 0 to (Array.length ship.(0)) - 1 do 
-      matrix.(num).(j) <- ship.(i).(j)
-    done
-  done
-
 let demo_board = 
-  modify_matrix init_matrix caml_5 0;
-  modify_matrix init_matrix caml_4 1;
-  modify_matrix init_matrix caml_3 2;
-  modify_matrix init_matrix caml_3' 3;
-  modify_matrix init_matrix caml_2 4;
   init_matrix
 
 (* Returns a new matrix where the rows of [m] become the columns of 
    [transpose m] *)
 let transpose m = 
   Array.init (Array.length m.(0)) (fun i -> 
-    Array.init (Array.length m) (fun j -> m.(j).(i)))
+      Array.init (Array.length m) (fun j -> m.(j).(i)))
 
 (* Returns the value at the x, y coordinates contained in [c], of matrix [m] *)
 let get_val_of_coord (m:t) (c:coord) = m.(fst c).(snd c)
@@ -112,10 +99,10 @@ let string_of_tuple tup =
 
 let give_hint matrix = 
   for i = 0 to Array.length matrix do
-      if matrix.(i).(4) = Unhit then 
-        print_string ("\nThere is an unhit caml at " ^ string_of_tuple (i, 4) ^ "\n")
-      else
-        print_string "\nCouldn't Find Anything For You. Just Keep Firing!\n"
+    if matrix.(i).(4) = Unhit then 
+      print_string ("\nThere is an unhit caml at " ^ string_of_tuple (i, 4) ^ "\n")
+    else
+      print_string "\nCouldn't Find Anything For You. Just Keep Firing!\n"
   done
 
 let format_row (row: entry array) = 
