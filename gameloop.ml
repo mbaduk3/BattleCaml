@@ -38,10 +38,10 @@ let handle_input win b =
   match get_key win with
     | Down -> if !crosshair_y < 10 then incr crosshair_y 
               else crosshair_y := 1; b
-    | Up -> if !crosshair_y > 0 then decr crosshair_y
-            else crosshair_y := 9; b
-    | Left -> if !crosshair_x > 0 then decr crosshair_x
-              else crosshair_x := 9; b
+    | Up -> if !crosshair_y > 1 then decr crosshair_y
+            else crosshair_y := 10; b
+    | Left -> if !crosshair_x > 1 then decr crosshair_x
+              else crosshair_x := 10; b
     | Right -> if !crosshair_x < 10 then incr crosshair_x
                 else crosshair_x := 1; b
     | Fire -> handle_fire win b
