@@ -9,6 +9,8 @@ let ship_i = ref 0
 
 (* Change later to display responsive results *)
 let handle_fire win b = 
+  if (!ship_i != 5) then b 
+  else
   let (x, y) = (!crosshair_y - 1, !crosshair_x - 1) in
   let res = Gameboard.fire (x, y) b in
   match res with 
