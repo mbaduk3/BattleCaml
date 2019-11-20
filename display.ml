@@ -16,6 +16,8 @@ let miss_ch = int_of_char '0'
 let unhit_ch = int_of_char '~'
 let empty_ch = int_of_char '.'
 
+let col_timer = ref 0. 
+
 let incr_cur b = 
   cur_x := !cur_x + 1;
   if (!cur_x > Array.length b.(0)) then 
@@ -24,9 +26,12 @@ let incr_cur b =
   else if (!cur_y > Array.length b) then 
     cur_y := 1
 
-let render_board b win =
+let render_board b win dt =
   cur_x := 1;
   cur_y := 1;
+  col_timer := !col_timer +. dt;
+  if (!col_timer > 5.) then exit 0 
+  else 
   for i = 0 to Array.length b - 1 do 
     for j = 0 to (Array.length b.(0) - 1) do 
       begin
@@ -53,12 +58,13 @@ let render_board b win =
     done
   done
 
-let render b = 
+let render b dt = 
   (*Curses.erase ();*)
   (*Curses.box !scr 0 0;*)
   Curses.box !b_win 0 0;
-  render_board b !b_win;
-  Curses.wrefresh !b_win
+  render_board b !b_win dt;
+  Curses.wrefresh !b_win;
+  Unix.gettimeofday ()
 (*ignore(Curses.refresh ())*)
 
 let exit_display () = 

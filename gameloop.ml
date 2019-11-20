@@ -1,11 +1,11 @@
 open Gameboard
 open Display
 open Command
-
-exception All_placed
+open Sys
 
 (* Reference to the counter for the number of ships placed in placement phase *)
 let ship_i = ref 0
+let starttime = Unix.gettimeofday ()
 
 (* Change later to display responsive results *)
 let handle_fire win b = 
@@ -49,14 +49,16 @@ let handle_input win b =
     | Quit -> exit_display (); b
     | _ -> b
 
-let rec play_game b = 
-  render b;
+let rec play_game b dt = 
+  let ntime = render b dt in 
+  let dt = Unix.gettimeofday () -. ntime in 
   let b' = handle_input !Display.b_win b in
-  play_game b'
+  play_game b' dt
 
 let main () = 
+  let dt = Unix.gettimeofday () -. starttime in
   print_string "Welcome!";
-  play_game demo_board
+  play_game demo_board dt
 
 let () = main ()
 
