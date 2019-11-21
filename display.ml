@@ -65,7 +65,7 @@ let render_board b win dt =
           ignore (wattroff win Curses.WA.standout);
           if (!cur_x = !crosshair_x && !cur_y = !crosshair_y) then
           ignore (wattron win (Curses.WA.color_pair 1));
-          ignore(Curses.mvwaddch win !cur_y !cur_x hit_ch);
+          ignore(Curses.mvwaddch win !cur_y (!cur_x*2) hit_ch);
           incr_cur b;
           ignore (wattroff win (Curses.WA.color_pair 1))
         | Miss -> 
@@ -73,7 +73,7 @@ let render_board b win dt =
           ignore (wattroff win Curses.WA.standout);
           if (!cur_x = !crosshair_x && !cur_y = !crosshair_y) then
           ignore (wattron win (Curses.WA.color_pair 1));
-          ignore(Curses.mvwaddch win !cur_y !cur_x miss_ch);
+          ignore(Curses.mvwaddch win !cur_y (!cur_x*2) miss_ch);
           incr_cur b;
           ignore (wattroff win (Curses.WA.color_pair 1))
         | Unhit -> 
