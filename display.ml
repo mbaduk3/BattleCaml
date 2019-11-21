@@ -20,6 +20,13 @@ let miss_ch = int_of_char '0'
 let unhit_ch = int_of_char '~'
 let empty_ch = int_of_char '.'
 
+let blue = Curses.Color.blue
+let red = Curses.Color.red
+let green = Curses.Color.green
+let bkgd_color win = Curses.getbkgd win
+
+let color_pair1 win = init_pair 1 (bkgd_color win) red
+
 let cur_timer = ref 0. 
 
 let incr_cur b = 
@@ -33,6 +40,7 @@ let incr_cur b =
 let render_board b win dt =
   cur_x := 1;
   cur_y := 1;
+  ignore (start_color ());
   cur_timer := !cur_timer +. dt;
   for i = 0 to Array.length b - 1 do 
     for j = 0 to (Array.length b.(0) - 1) do 
@@ -53,13 +61,21 @@ let render_board b win dt =
           end;
         match b.(i).(j) with 
         | Hit -> 
-          ignore(Curses.mvwaddch win !cur_y (!cur_x*2) hit_ch); 
+          ignore (color_pair1 win);
+          ignore (wattroff win Curses.WA.standout);
+          if (!cur_x = !crosshair_x && !cur_y = !crosshair_y) then
+          ignore (wattron win (Curses.WA.color_pair 1));
+          ignore(Curses.mvwaddch win !cur_y !cur_x hit_ch);
           incr_cur b;
-          ignore(wattroff win Curses.WA.standout)
+          ignore (wattroff win (Curses.WA.color_pair 1))
         | Miss -> 
-          ignore(Curses.mvwaddch win !cur_y (!cur_x*2) miss_ch);
+          ignore (color_pair1 win);
+          ignore (wattroff win Curses.WA.standout);
+          if (!cur_x = !crosshair_x && !cur_y = !crosshair_y) then
+          ignore (wattron win (Curses.WA.color_pair 1));
+          ignore(Curses.mvwaddch win !cur_y !cur_x miss_ch);
           incr_cur b;
-          ignore(wattroff win Curses.WA.standout)
+          ignore (wattroff win (Curses.WA.color_pair 1))
         | Unhit -> 
           ignore(Curses.mvwaddch win !cur_y (!cur_x*2) unhit_ch);
           incr_cur b;
