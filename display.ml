@@ -8,7 +8,7 @@ let () =
   ignore(Curses.curs_set 0); 
   ignore(Curses.nodelay !scr true)
 let b_win = ref (newwin 12 (12 * 2 - 1) 1 5)
-let ai_win = ref (newwin 12 (12 * 2 - 1) 1 30)
+let ai_win = ref null_window
 let () = 
   ignore(Curses.nodelay !b_win true)
 let cur_x = ref 1
@@ -31,6 +31,15 @@ let incr_cur b =
   else if (!cur_y > Array.length b) then 
     cur_y := 1
 
+let placement_init () = 
+  ignore(mvwin !b_win 1 17);
+  ignore(refresh)
+
+let play_init () = 
+  ignore(mvwin !b_win 1 5);
+  ai_win := (newwin 12 (12 * 2 - 1) 1 30);
+  ignore(refresh)
+
 let render_board b win dt =
   cur_x := 1;
   cur_y := 1;
@@ -40,12 +49,12 @@ let render_board b win dt =
       begin
         if (!cur_x = !crosshair_x && !cur_y = !crosshair_y) then
           begin
-          if (1000. *. !cur_timer < 10.) then 
+          if (1000. *. !cur_timer < 35.) then 
             begin
             ignore(wattroff win Curses.WA.protect);
             ignore(wattron win Curses.WA.standout)
             end;
-          if (1000. *. !cur_timer > 20.) then 
+          if (1000. *. !cur_timer > 50.) then 
             begin
             ignore(wattr_off win Curses.WA.standout);
             ignore(cur_timer := 0.);
@@ -73,7 +82,7 @@ let render_board b win dt =
     done
   done;
   (* Use to render cur_time: *)
-  ignore(mvwaddstr win 9 1 (string_of_float !cur_timer))
+  (ignore(mvwaddstr win 9 1 (string_of_float !cur_timer)))
 
 let render_ai_board b win dt = 
   cur_x := 1;

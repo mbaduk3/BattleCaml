@@ -2,6 +2,9 @@ open Gameboard
 open Display
 open Command
 
+type phase = Placement | Play
+let in_phase = ref Placement
+
 (* Reference to the counter for the number of ships placed in placement phase *)
 let ship_i = ref 0
 let starttime = Sys.time ()
@@ -25,12 +28,20 @@ let place_ship matrix ship x y =
     matrix.(y - 1).(x + i - 1) <- (List.nth ships ship).(i)
   done
 
+let change_phase p =
+  match p with 
+    | Placement -> 
+        placement_init ()
+    | Play -> 
+        play_init ()
+
 let rec handle_placement win b =
   try
     if (!ship_i < 5) then 
       begin
         place_ship b !ship_i (!crosshair_x) !crosshair_y; 
-        incr ship_i
+        incr ship_i;
+        if (!ship_i = 5) then change_phase Play else ()
       end
       else 
       (* TODO: include useful error message: "You have placed all the ships!" *)
@@ -62,15 +73,18 @@ let handle_input win b =
     | Quit -> exit_display (); b
     | _ -> b
 
-let rec play_game b dt = 
-  let ntime = render b dt in 
-  let dt = Sys.time () -. ntime in 
+
+let rec play_game b t = 
+  let dt = Sys.time () -. t in
+  let ntime = render b dt in
   let b' = handle_input !Display.b_win b in
-  play_game b' dt
+  play_game b' ntime
+
 
 let main () = 
   let dt = Sys.time () -. starttime in
   print_string "Welcome!";
+  change_phase Placement;
   play_game demo_board dt
 
 let () = main ()
