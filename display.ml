@@ -40,12 +40,12 @@ let render_board b win dt =
       begin
         if (!cur_x = !crosshair_x && !cur_y = !crosshair_y) then
           begin
-          if (1000. *. !cur_timer < 1.8) then 
+          if (1000. *. !cur_timer < 10.) then 
             begin
             ignore(wattroff win Curses.WA.protect);
             ignore(wattron win Curses.WA.standout)
             end;
-          if (1000. *. !cur_timer > 3.1) then 
+          if (1000. *. !cur_timer > 20.) then 
             begin
             ignore(wattr_off win Curses.WA.standout);
             ignore(cur_timer := 0.);
