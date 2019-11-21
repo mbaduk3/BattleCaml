@@ -4,7 +4,7 @@ type coord = (int * int)
 
 type entry = Hit | Miss | Unhit | Empty
 
-type t = entry Array.t array
+type t = entry array array
 
 type ship = t
 
