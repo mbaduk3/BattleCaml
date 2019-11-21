@@ -4,7 +4,7 @@ open Command
 
 (* Reference to the counter for the number of ships placed in placement phase *)
 let ship_i = ref 0
-let starttime = Unix.gettimeofday ()
+let starttime = Sys.time ()
 
 (* Change later to display responsive results *)
 let handle_fire win b = 
@@ -64,12 +64,12 @@ let handle_input win b =
 
 let rec play_game b dt = 
   let ntime = render b dt in 
-  let dt = Unix.gettimeofday () -. ntime in 
+  let dt = Sys.time () -. ntime in 
   let b' = handle_input !Display.b_win b in
   play_game b' dt
 
 let main () = 
-  let dt = Unix.gettimeofday () -. starttime in
+  let dt = Sys.time () -. starttime in
   print_string "Welcome!";
   play_game demo_board dt
 
