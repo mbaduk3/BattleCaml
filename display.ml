@@ -9,6 +9,9 @@ let () =
   ignore(Curses.nodelay !scr true)
 let b_win = ref (newwin 12 (12 * 2 - 1) 1 5)
 let ai_win = ref null_window
+let score_win = ref (newwin 3 15 3 54)
+let meta_win = ref (newwin 9 15 6 54)
+let err_win = ref (newwin 3 43 17 15)
 let () = 
   ignore(Curses.nodelay !b_win true)
 let cur_x = ref 1
@@ -45,12 +48,14 @@ let incr_cur b =
 
 let placement_init () = 
   let y,x = getmaxyx !scr in
-  ignore(mvwin !b_win 3 19);
+  ignore(mvwin !b_win 3 29);
   ignore(refresh)
 
 let play_init () = 
-  ignore(mvwin !b_win 3 30);
-  ai_win := (newwin 12 (12 * 2 - 1) 3 5);
+  ignore(mvwin !b_win 3 45);
+  ai_win := (newwin 12 (12 * 2 - 1) 3 20);
+  ignore(mvwin !score_win 3 70);
+  ignore(mvwin !meta_win 6 70);
   ignore(wclear !scr);
   ignore(wrefresh !scr)
 
@@ -172,11 +177,11 @@ let render_ai_board b win dt =
   (* ignore(mvwaddstr win 9 1 (string_of_float !cur_timer)) *)
 
 let render_names_placement () = 
-  mvwaddstr !scr 2 20 "My board:"
+  mvwaddstr !scr 2 30 "My board:"
 
 let render_names_play () = 
-  mvwaddstr !scr 2 31 "My board:";
-  mvwaddstr !scr 2 6 "AI board:"
+  mvwaddstr !scr 2 46 "My board:";
+  mvwaddstr !scr 2 19 "AI board:"
 
 let render_names phase = 
   match phase with 
@@ -184,15 +189,25 @@ let render_names phase =
   | 1 -> ignore(render_names_play ())
   | _ -> ()
 
+let render_score score = 
+  ignore(mvwaddstr !score_win 1 1 ("Score: " ^ (string_of_int score)))
+
 let render b opp_b phase dt = 
   (* Curses.wborder !scr 0 0 0 0 0 0 0 0; *)
   Curses.wborder !b_win 0 0 0 0 0 0 0 0;
   Curses.box !ai_win 0 0;
+  Curses.box !score_win 0 0;
+  Curses.box !meta_win 0 0;
+  Curses.box !err_win 0 0;
   render_board b !b_win dt;
   render_ai_board opp_b !ai_win dt;
   render_names phase;
+  render_score 0;
   Curses.wrefresh !b_win;
+  Curses.wrefresh !score_win;
   Curses.wrefresh !ai_win;
+  Curses.wrefresh !err_win;
+  Curses.wrefresh !meta_win;
   Curses.wrefresh !scr;
   Sys.time ()
 
