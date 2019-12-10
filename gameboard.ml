@@ -20,7 +20,7 @@ exception Out_of_bounds
    Array.(i).(j) gives the val at row i, column j *)
 
 (* A 10x10 board of Empty values *)
-let init_matrix:t = Array.make_matrix 10 10 Empty
+let init_matrix = Array.make_matrix 10 10 Empty
 
 (* Returns the 0-based index of [elem] in the list [lst] *)
 let rec index lst elem acc = 
