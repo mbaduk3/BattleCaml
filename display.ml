@@ -39,6 +39,24 @@ let cur_timer = ref 0.
 let turn_count = ref 0
 let scr_width = ref 0
 
+let battlecaml_str = "
+  ____        _   _   _       ____                _ 
+ | __ )  __ _| |_| |_| | ___ / ___|__ _ _ __ ___ | |
+ |  _ \ / _` | __| __| |/ _ \ |   / _` | '_ ` _ \| |
+ | |_) | (_| | |_| |_| |  __/ |__| (_| | | | | | | |
+ |____/ \__,_|\__|\__|_|\___|\____\__,_|_| |_| |_|_|"
+
+let p_to_play_str = "
+                            _ _     _ _   _                _             
+                           ( | )   ( | ) | |              | |            
+  _ __  _ __ ___  ___ ___   V V_ __ V V  | |_ ___    _ __ | | __ _ _   _ 
+ | '_ \| '__/ _ \/ __/ __|    | '_ \     | __/ _ \  | '_ \| |/ _` | | | |
+ | |_) | | |  __/\__ \__ \    | |_) |    | || (_) | | |_) | | (_| | |_| |
+ | .__/|_|  \___||___/___/    | .__/      \__\___/  | .__/|_|\__,_|\__, |
+ | |                          | |                   | |             __/ |
+ |_|                          |_|                   |_|            |___/ 
+"
+
 let incr_cur b = 
   cur_x := !cur_x + 1;
   if (!cur_x > Array.length b.(0)) then 
@@ -76,10 +94,7 @@ let play_init () =
 
 (* Initalize the menu phase windows *)
 let menu_init () = 
-  sel_win := (newwin (!max_y / 2) (50) 4 25);
-  ignore(mvwaddstr !sel_win 1 1 "BattleCaml");
-  ignore(mvwaddstr !sel_win 3 1 "Press 'p' to play")
-
+  sel_win := (newwin 20 80 3 3)
 
 (* True if the drawing cursor coordinates are equal to a crosshair coord.
    False otherwise *)
@@ -221,7 +236,8 @@ let render_err err =
   ignore(mvwaddstr !err_win 1 1 err)
 
 let render_turn turn = 
-  ignore(mvwaddstr !meta_win 1 1 ("Turn #: " ^ string_of_int turn))
+  let turn' = turn / 2 in 
+  ignore(mvwaddstr !meta_win 1 1 ("Turn #: " ^ string_of_int turn'))
 
 let str_of_phase = function 
   | 0 -> "Placement"
@@ -233,16 +249,16 @@ let render_phase phase =
   ignore(mvwaddstr !meta_win 2 1 phase)
 
 let menu_refresh () = 
-  ignore(mvwin !sel_win (!max_y / 2) (!max_x / 2));
+  let h,w = getmaxyx !sel_win in 
+  ignore(mvwin !sel_win (!max_y / 2 - (h / 2)) (!max_x / 2 - (w / 2)));
   ignore(mvwhline !scr 3 0 0 1000);
-  ignore(mvwhline !scr (!max_y - 3) 0 0 1000)
-
+  ignore(mvwhline !scr (!max_y - 3) 0 0 1000);
+  ignore(mvwaddstr !sel_win 1 1 battlecaml_str);
+  ignore(mvwaddstr !sel_win 8 1 p_to_play_str);
+  ignore(box !sel_win 0 0)
 
 let menu_helper win phase dt = 
-  menu_init ();
-  menu_refresh ();
-  ignore(mvwaddstr !sel_win 4 8 (string_of_int !max_y))
-
+  menu_refresh ()
   
 (* Refreshes max_x, max_y to the current terminal size *)
 let update_maxs () =
