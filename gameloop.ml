@@ -178,7 +178,7 @@ let handle_input win b =
 (* Blank for now *)
 let ai_fire opp_b = turn_count := !turn_count + 1; opp_b
 
-let ai_placement =
+let ai_placement () =
   let count = ref 0 in
   let m = init_matrix () in
   while !count < 5 do
@@ -209,7 +209,7 @@ let main () =
   let dt = Sys.time () -. starttime in
   print_string "Welcome!";
   change_phase Placement;
-  play_game demo_board ai_placement dt
+  play_game demo_board (ai_placement ()) dt
 
 let () = main ()
 

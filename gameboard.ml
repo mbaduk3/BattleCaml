@@ -13,6 +13,8 @@ type response = Contact of t | No_contact of t |
 
 type orientation = Vertical | Horizontal
 
+let u = Random.self_init ()
+
 exception Malformed 
 exception Out_of_bounds 
 
