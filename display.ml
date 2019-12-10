@@ -76,7 +76,7 @@ let render_board b win dt =
           ignore (color_pair1 win);
           ignore (wattroff win Curses.WA.standout);
           if (!cur_x = !crosshair_x && !cur_y = !crosshair_y) then
-          ignore (wattron win (Curses.WA.color_pair 1));
+            ignore (wattron win (Curses.WA.color_pair 1));
           ignore(Curses.mvwaddch win !cur_y (!cur_x*2) hit_ch);
           incr_cur b;
           ignore (wattroff win (Curses.WA.color_pair 1))
@@ -84,7 +84,7 @@ let render_board b win dt =
           ignore (color_pair1 win);
           ignore (wattroff win Curses.WA.standout);
           if (!cur_x = !crosshair_x && !cur_y = !crosshair_y) then
-          ignore (wattron win (Curses.WA.color_pair 1));
+            ignore (wattron win (Curses.WA.color_pair 1));
           ignore(Curses.mvwaddch win !cur_y (!cur_x*2) miss_ch);
           incr_cur b;
           ignore (wattroff win (Curses.WA.color_pair 1))
@@ -128,6 +128,8 @@ let render_ai_board b win dt =
     end
     done
   done
+(* Use to render cur_time: *)
+   ignore(mvwaddstr win 9 1 (string_of_float !cur_timer));
 
 let render b opp_b phase dt = 
   Curses.box !b_win 0 0;
