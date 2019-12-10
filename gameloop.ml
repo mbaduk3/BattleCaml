@@ -2,6 +2,8 @@ open Gameboard
 open Display
 open Command
 open Ai_hard
+open Ai_easy
+open Ai_medium
 
 type phase = Placement | Play
 let in_phase = ref Placement
@@ -31,10 +33,10 @@ let handle_fire win b =
     turn_count := !turn_count + 1;
     let res = Gameboard.fire (x, y) b in
     match res with 
-    | No_contact m -> incr_turn (); m
+    | No_contact m ->  m
     | Already_hit m -> m 
     | Already_miss m -> m 
-    | Contact m -> incr_turn (); m
+    | Contact m -> m
     | _ -> failwith "Unimplemented"
 
 (* let place_ship matrix ship_i x y = 
@@ -201,7 +203,7 @@ let handle_input win b =
 (* Blank for now *)
 let ai_fire opp_b = 
   turn_count := !turn_count + 1; 
-  Ai_hard.ai_fire opp_b
+  Ai_medium.ai_fire opp_b
 
 let ai_placement () =
   let count = ref 0 in

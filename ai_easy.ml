@@ -42,8 +42,8 @@ let ai_fire m =
     let (x, y) = choose_rnd_elt_in_lst list_generated in
     ignore (filter (x, y) list_generated);
     match m.(x).(y) with
-      | Unhit ->  m.(x).(y) <- Hit; Contact m
-      | Empty -> m.(x).(y) <- Miss; No_contact m
+      | Unhit ->  m.(x).(y) <- Hit; m
+      | Empty -> m.(x).(y) <- Miss; m
       | _ -> raise (Invalid_argument "This will not be possible")
     else
       raise (Invalid_argument "This will not be possible")

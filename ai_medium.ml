@@ -82,9 +82,9 @@ let ai_fire m =
             let x = fst !unhit_coord in
             let y = snd !unhit_coord in
             m.(x).(y) <- Hit; 
-            Contact m
+            m
   | false -> get_valid_rndm_coord m;
              let x = fst !empty_coord in
              let y = snd !empty_coord in
              m.(x).(y) <- Miss;
-             No_contact m
+            m
