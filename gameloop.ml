@@ -1,6 +1,9 @@
 open Gameboard
 open Display
 open Command
+open Ai_hard
+open Ai_easy
+open Ai_medium
 
 type phase = Placement | Play | Menu
 let in_phase = ref Menu
@@ -35,7 +38,7 @@ let handle_fire win b =
     | No_contact m -> incr_turn (); m
     | Already_hit m -> m 
     | Already_miss m -> m 
-    | Contact m -> incr_turn (); m
+    | Contact m -> m
     | _ -> failwith "Unimplemented"
 
 (* let place_ship matrix ship_i x y = 
@@ -213,7 +216,7 @@ let handle_input win b =
 (* Blank for now *)
 let ai_fire opp_b = 
   turn_count := !turn_count + 1; 
-  opp_b
+  Ai_medium.ai_fire opp_b
 
 (* Generates a random board with placed ships for the ai *)
 let ai_placement () =
