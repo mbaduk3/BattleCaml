@@ -42,6 +42,8 @@ let handle_fire win b =
   for i = 0 to (ship_len - 1) do 
     matrix.(y - 1).(x + i - 1) <- (List.nth ships ship_i).(i)
   done *)
+
+(* Invert the orientation of the ship at index [ship] in the ships matrix *)
 let handle_rotate ship =
   if snd ships.(ship) = Horizontal
   then ships.(ship) <- (fst (ships.(ship)), Vertical)
@@ -105,20 +107,30 @@ let place_ship matrix ship x y rot =
     
 (* Returns a crosshair matrix from a given ship matrix. 
    This is used for placement-phase highlighting *)
-let cross_mat_of_ship ship = 
+let cross_mat_of_ship ship orient = 
   let len = Array.length ship in 
-  Array.make_matrix len 1 1
+  if (orient = Horizontal) then 
+    Array.make_matrix len 1 1
+  else 
+    Array.make_matrix 1 len 1
 
+let orient_of_rot = function
+  | false -> Horizontal 
+  | true -> Vertical
+
+(* Updates the cursor matrix to reflect the next ship that is to be placed *)
 let update_cur_ship () = 
-  if (!ship_i = 4) then 
+  if (!ship_i = 5) then 
     crosshair_mat := (List.nth bullets 0)
   else
-    crosshair_mat := cross_mat_of_ship (List.nth ships (!ship_i + 1))
+    let s,orient = Array.get ships (!ship_i) in
+    crosshair_mat := cross_mat_of_ship s (orient)
 
 let change_phase p =
   match p with 
     | Placement -> 
-        crosshair_mat := cross_mat_of_ship (List.nth ships !ship_i);
+        let s,orient = Array.get ships (!ship_i) in 
+        crosshair_mat := cross_mat_of_ship s orient;
         placement_init ()
     | Play -> 
         play_init ()
@@ -127,11 +139,11 @@ let handle_placement win b rot =
   try
     if (!ship_i < 5) then 
       begin
-        update_cur_ship ();
         place_ship b !ship_i (!crosshair_x) !crosshair_y rot;
         if rot then ()
         else 
-          incr ship_i;
+          (* update_cur_ship rot; *)
+          if not rot then incr ship_i;
           if (!ship_i = 5) then change_phase Play else ()
       end
     else 
@@ -171,6 +183,7 @@ let ai_fire opp_b = turn_count := !turn_count + 1; opp_b
 let rec play_game b opp_b t = 
   let dt = Sys.time () -. t in
   let ntime = render b opp_b (int_of_phase !in_phase) dt in
+  if (!in_phase = Placement) then update_cur_ship ();
   if (!turn_count mod 2 = 0) then
     let b' = handle_input !Display.b_win b in
     play_game b' opp_b ntime
