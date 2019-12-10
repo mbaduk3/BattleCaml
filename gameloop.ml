@@ -150,9 +150,11 @@ let change_phase p =
     | Placement -> 
         let s,orient = Array.get ships (!ship_i) in 
         crosshair_mat := cross_mat_of_ship s orient;
-        placement_init ()
+        placement_init ();
+        in_phase := Placement
     | Play -> 
-        play_init ()
+        play_init ();
+        in_phase := Play
         
 let handle_placement win b rot =
   try

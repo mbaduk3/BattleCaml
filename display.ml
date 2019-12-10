@@ -9,6 +9,9 @@ let () =
   ignore(Curses.nodelay !scr true)
 let b_win = ref (newwin 12 (12 * 2 - 1) 1 5)
 let ai_win = ref null_window
+let score_win = ref (newwin 3 15 3 54)
+let meta_win = ref (newwin 9 15 6 54)
+let err_win = ref (newwin 3 43 17 15)
 let () = 
   ignore(Curses.nodelay !b_win true)
 let cur_x = ref 1
@@ -33,6 +36,7 @@ let color_pair1 win = init_pair 1 (bkgd_color win) red
 
 let cur_timer = ref 0. 
 let turn_count = ref 0
+let scr_width = ref 0
 
 let incr_cur b = 
   cur_x := !cur_x + 1;
@@ -43,12 +47,15 @@ let incr_cur b =
     cur_y := 1
 
 let placement_init () = 
-  ignore(mvwin !b_win 1 19);
+  let y,x = getmaxyx !scr in
+  ignore(mvwin !b_win 3 29);
   ignore(refresh)
 
 let play_init () = 
-  ignore(mvwin !b_win 1 30);
-  ai_win := (newwin 12 (12 * 2 - 1) 1 5);
+  ignore(mvwin !b_win 3 45);
+  ai_win := (newwin 12 (12 * 2 - 1) 3 20);
+  ignore(mvwin !score_win 3 70);
+  ignore(mvwin !meta_win 6 70);
   ignore(wclear !scr);
   ignore(wrefresh !scr)
 
@@ -70,6 +77,47 @@ let check_cross () =
     then false
     else true
 
+let handle_hit b win dt = 
+  ignore (color_pair1 win);
+  ignore (wattroff win Curses.WA.standout);
+  if (check_cross ()) then
+  ignore (wattron win (Curses.WA.color_pair 1));
+  ignore(Curses.mvwaddch win !cur_y (!cur_x*2) hit_ch);
+  incr_cur b;
+  ignore (wattroff win (Curses.WA.color_pair 1))
+
+let handle_miss b win dt = 
+  ignore (color_pair1 win);
+  ignore (wattroff win Curses.WA.standout);
+  if (check_cross ()) then
+  ignore (wattron win (Curses.WA.color_pair 1));
+  ignore(Curses.mvwaddch win !cur_y (!cur_x*2) miss_ch);
+  incr_cur b;
+  ignore (wattroff win (Curses.WA.color_pair 1))
+
+let handle_unhit b win dt = 
+  ignore(Curses.mvwaddch win !cur_y (!cur_x*2) unhit_ch);
+  incr_cur b;
+  ignore(wattroff win Curses.WA.standout)
+
+let handle_misc b win dt = 
+  ignore(Curses.mvwaddch win !cur_y (!cur_x*2) empty_ch);
+  incr_cur b;
+  ignore(wattroff win Curses.WA.standout)
+
+let cur_blink_helper b win dt = 
+  if (1000. *. !cur_timer < 35.) then 
+    begin
+    ignore(wattroff win Curses.WA.protect);
+    ignore(wattron win Curses.WA.standout)
+    end;
+  if (1000. *. !cur_timer > 50.) then 
+    begin
+    ignore(wattr_off win Curses.WA.standout);
+    ignore(cur_timer := 0.);
+    ignore(wattron win Curses.WA.protect)
+    end
+
 let render_board b win dt =
   cur_x := 1;
   cur_y := 1;
@@ -79,49 +127,37 @@ let render_board b win dt =
     for j = 0 to (Array.length b.(0) - 1) do 
       begin
         if (check_cross ()) then
-          begin
-          if (1000. *. !cur_timer < 35.) then 
-            begin
-            ignore(wattroff win Curses.WA.protect);
-            ignore(wattron win Curses.WA.standout)
-            end;
-          if (1000. *. !cur_timer > 50.) then 
-            begin
-            ignore(wattr_off win Curses.WA.standout);
-            ignore(cur_timer := 0.);
-            ignore(wattron win Curses.WA.protect)
-            end
-          end;
+          cur_blink_helper b win dt;
         match b.(i).(j) with 
-        | Hit -> 
-          ignore (color_pair1 win);
-          ignore (wattroff win Curses.WA.standout);
-          if (check_cross ()) then
-          ignore (wattron win (Curses.WA.color_pair 1));
-          ignore(Curses.mvwaddch win !cur_y (!cur_x*2) hit_ch);
-          incr_cur b;
-          ignore (wattroff win (Curses.WA.color_pair 1))
-        | Miss -> 
-          ignore (color_pair1 win);
-          ignore (wattroff win Curses.WA.standout);
-          if (check_cross ()) then
-          ignore (wattron win (Curses.WA.color_pair 1));
-          ignore(Curses.mvwaddch win !cur_y (!cur_x*2) miss_ch);
-          incr_cur b;
-          ignore (wattroff win (Curses.WA.color_pair 1))
-        | Unhit -> 
-          ignore(Curses.mvwaddch win !cur_y (!cur_x*2) unhit_ch);
-          incr_cur b;
-          ignore(wattroff win Curses.WA.standout)
-        | _ -> 
-          ignore(Curses.mvwaddch win !cur_y (!cur_x*2) empty_ch);
-          incr_cur b;
-          ignore(wattroff win Curses.WA.standout)
+        | Hit -> handle_hit b win dt
+        | Miss -> handle_miss b win dt
+        | Unhit -> handle_unhit b win dt
+        | _ -> handle_misc b win dt
       end
     done
-  done;
+  done
   (* Use to render cur_time: *)
-  (ignore(mvwaddstr win 9 1 (string_of_float !cur_timer)))
+  (* (ignore(mvwaddstr win 9 1 (string_of_float !cur_timer))) *)
+
+let handle_hit_ai b win dt = 
+  ignore(Curses.mvwaddch win !cur_y (!cur_x*2) hit_ch); 
+  incr_cur b;
+  ignore(wattroff win Curses.WA.standout)
+
+let handle_miss_ai b win dt = 
+  ignore(Curses.mvwaddch win !cur_y (!cur_x*2) miss_ch);
+  incr_cur b;
+  ignore(wattroff win Curses.WA.standout)
+
+let handle_unhit_ai b win dt = 
+  ignore(Curses.mvwaddch win !cur_y (!cur_x*2) unhit_ch);
+  incr_cur b;
+  ignore(wattroff win Curses.WA.standout)
+
+let handle_misc_ai b win dt = 
+  ignore(Curses.mvwaddch win !cur_y (!cur_x*2) empty_ch);
+  incr_cur b;
+  ignore(wattroff win Curses.WA.standout)
 
 let render_ai_board b win dt = 
   cur_x := 1;
@@ -130,35 +166,49 @@ let render_ai_board b win dt =
     for j = 0 to (Array.length b.(0) - 1) do 
     begin 
     match b.(i).(j) with 
-        | Hit -> 
-          ignore(Curses.mvwaddch win !cur_y (!cur_x*2) hit_ch); 
-          incr_cur b;
-          ignore(wattroff win Curses.WA.standout)
-        | Miss -> 
-          ignore(Curses.mvwaddch win !cur_y (!cur_x*2) miss_ch);
-          incr_cur b;
-          ignore(wattroff win Curses.WA.standout)
-        | Unhit -> 
-          ignore(Curses.mvwaddch win !cur_y (!cur_x*2) unhit_ch);
-          incr_cur b;
-          ignore(wattroff win Curses.WA.standout)
-        | _ -> 
-          ignore(Curses.mvwaddch win !cur_y (!cur_x*2) empty_ch);
-          incr_cur b;
-          ignore(wattroff win Curses.WA.standout)
+        | Hit -> handle_hit_ai b win dt
+        | Miss -> handle_miss_ai b win dt
+        | Unhit -> handle_unhit_ai b win dt
+        | _ -> handle_misc_ai b win dt
     end
     done
-  done;
+  done
 (* Use to render cur_time: *)
-  ignore(mvwaddstr win 9 1 (string_of_float !cur_timer))
+  (* ignore(mvwaddstr win 9 1 (string_of_float !cur_timer)) *)
+
+let render_names_placement () = 
+  mvwaddstr !scr 2 30 "My board:"
+
+let render_names_play () = 
+  mvwaddstr !scr 2 46 "My board:";
+  mvwaddstr !scr 2 19 "AI board:"
+
+let render_names phase = 
+  match phase with 
+  | 0 -> ignore(render_names_placement ())
+  | 1 -> ignore(render_names_play ())
+  | _ -> ()
+
+let render_score score = 
+  ignore(mvwaddstr !score_win 1 1 ("Score: " ^ (string_of_int score)))
 
 let render b opp_b phase dt = 
-  Curses.box !b_win 0 0;
+  (* Curses.wborder !scr 0 0 0 0 0 0 0 0; *)
+  Curses.wborder !b_win 0 0 0 0 0 0 0 0;
   Curses.box !ai_win 0 0;
+  Curses.box !score_win 0 0;
+  Curses.box !meta_win 0 0;
+  Curses.box !err_win 0 0;
   render_board b !b_win dt;
   render_ai_board opp_b !ai_win dt;
+  render_names phase;
+  render_score 0;
   Curses.wrefresh !b_win;
+  Curses.wrefresh !score_win;
   Curses.wrefresh !ai_win;
+  Curses.wrefresh !err_win;
+  Curses.wrefresh !meta_win;
+  Curses.wrefresh !scr;
   Sys.time ()
 
 let exit_display () = 
