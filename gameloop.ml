@@ -9,11 +9,10 @@ let in_phase = ref Placement
 let ship_i = ref 0
 
 let ship_coordinates = Array.make 5 (0, 0, 0, Horizontal)
+let opp_coordinates = Array.make 5 (0, 0, 0, Horizontal)
 let starttime = Sys.time ()
 
-let opp_board = demo_opp_board
 let bullets = (Array.make_matrix 1 1 1)::[]
-
 
 let turn_count = ref 0
 
@@ -27,10 +26,10 @@ let int_of_phase = function
 let handle_fire win b = 
   if (!ship_i != 5) then b 
   else
-  let (x, y) = (!crosshair_y - 1, !crosshair_x - 1) in
-  turn_count := !turn_count + 1;
-  let res = Gameboard.fire (x, y) b in
-  match res with 
+    let (x, y) = (!crosshair_y - 1, !crosshair_x - 1) in
+    turn_count := !turn_count + 1;
+    let res = Gameboard.fire (x, y) b in
+    match res with 
     | No_contact m -> incr_turn (); m
     | Already_hit m -> m 
     | Already_miss m -> m 
@@ -38,21 +37,21 @@ let handle_fire win b =
     | _ -> failwith "Unimplemented"
 
 (* let place_ship matrix ship_i x y = 
-  let ship_len = Array.length (List.nth ships ship_i) in 
-  for i = 0 to (ship_len - 1) do 
+   let ship_len = Array.length (List.nth ships ship_i) in 
+   for i = 0 to (ship_len - 1) do 
     matrix.(y - 1).(x + i - 1) <- (List.nth ships ship_i).(i)
   done *)
 
 (* Invert the orientation of the ship at index [ship] in the ships matrix *)
-let handle_rotate ship =
+let handle_rotate ships ship =
   if snd ships.(ship) = Horizontal
   then ships.(ship) <- (fst (ships.(ship)), Vertical)
   else ships.(ship) <- (fst (ships.(ship)), Horizontal)
 
-let check_placement ship x y orientation =
+let check_placement coords ships ship x y orientation =
   let ship_len = Array.length (fst (ships.(ship))) in
   for i = 0 to ship - 1 do
-    match ship_coordinates.(i) with
+    match coords.(i) with
     | (x', y', len', ori') -> if orientation = Horizontal && ori' = Horizontal
       then
         begin
@@ -80,8 +79,8 @@ let check_placement ship x y orientation =
         end
   done
 
-let place_ship matrix ship x y rot = 
-  if rot then handle_rotate ship
+let place_ship matrix ships ship x y rot = 
+  if rot then handle_rotate ships ship
   else
     let ship_len = Array.length (fst (ships.(ship))) in 
     let orientation = snd (ships.(ship)) in
@@ -92,19 +91,39 @@ let place_ship matrix ship x y rot =
       for i = 0 to (ship_len - 1) do
         if orientation = Horizontal then
           begin
-            check_placement ship x y orientation;
-            matrix.(y - 1).(x + i - 1) <- (fst (ships.(ship))).(i);
-            ship_coordinates.(ship) <- (x, y, ship_len, orientation)
+            if ships = opp_ships
+            then 
+              begin
+                check_placement opp_coordinates opp_ships ship x y orientation;
+                matrix.(y - 1).(x + i - 1) <- (fst (opp_ships.(ship))).(i);
+                opp_coordinates.(ship) <- (x, y, ship_len, orientation);
+              end
+            else
+              begin
+                check_placement ship_coordinates ships ship x y orientation;
+                matrix.(y - 1).(x + i - 1) <- (fst (ships.(ship))).(i);
+                ship_coordinates.(ship) <- (x, y, ship_len, orientation);
+              end
           end
         else
           begin
-            check_placement ship x y orientation;
-            matrix.(y + i - 1).(x - 1) <- (fst (ships.(ship))).(i);
-            ship_coordinates.(ship) <- (x, y, ship_len, orientation)
+            if ships = opp_ships
+            then
+              begin
+                check_placement opp_coordinates opp_ships ship x y orientation;
+                matrix.(y + i - 1).(x - 1) <- (fst (opp_ships.(ship))).(i);
+                opp_coordinates.(ship) <- (x, y, ship_len, orientation)
+              end
+            else
+              begin
+                check_placement ship_coordinates ships ship x y orientation;
+                matrix.(y + i - 1).(x - 1) <- (fst (ships.(ship))).(i);
+                ship_coordinates.(ship) <- (x, y, ship_len, orientation)
+              end
           end
       done
     end
-    
+
 (* Returns a crosshair matrix from a given ship matrix. 
    This is used for placement-phase highlighting *)
 let cross_mat_of_ship ship orient = 
@@ -139,20 +158,19 @@ let handle_placement win b rot =
   try
     if (!ship_i < 5) then 
       begin
-        place_ship b !ship_i (!crosshair_x) !crosshair_y rot;
+        update_cur_ship ();
+        place_ship b ships !ship_i (!crosshair_x) !crosshair_y rot;
         if rot then ()
         else 
           (* update_cur_ship rot; *)
           if not rot then incr ship_i;
           if (!ship_i = 5) then change_phase Play else ()
       end
-    else 
-      (* TODO: include useful error message: "You have placed all the ships!" *)
-      ()
+    else ()
+  (* TODO: include useful error message: "You have placed all the ships!" *)
   with 
-  | Invalid_argument e -> 
-    (*TODO: print error message [e]*)
-    ()
+  | Invalid_argument e -> ()
+(*TODO: print error message [e]*)
 
 let handle_input win b = 
   match get_key win with
@@ -180,6 +198,24 @@ let handle_input win b =
 (* Blank for now *)
 let ai_fire opp_b = turn_count := !turn_count + 1; opp_b
 
+let ai_placement () =
+  let count = ref 0 in
+  let m = Array.make_matrix 10 10 Empty in
+  while !count < 5 do
+    try
+      Random.self_init ();
+      if Random.bool ()
+      then place_ship m opp_ships !count (Random.int 10) (Random.int 10) true
+      else
+        begin
+          place_ship m opp_ships !count (Random.int 10) (Random.int 10) false;
+          incr count
+        end
+    with
+    | Invalid_argument e -> ();
+  done;
+  m
+
 let rec play_game b opp_b t = 
   let dt = Sys.time () -. t in
   let ntime = render b opp_b (int_of_phase !in_phase) dt in
@@ -195,7 +231,7 @@ let main () =
   let dt = Sys.time () -. starttime in
   print_string "Welcome!";
   change_phase Placement;
-  play_game demo_board opp_board dt
+  play_game demo_board (ai_placement ()) dt
 
 let () = main ()
 
