@@ -33,12 +33,12 @@ let incr_cur b =
     cur_y := 1
 
 let placement_init () = 
-  ignore(mvwin !b_win 1 17);
+  ignore(mvwin !b_win 1 19);
   ignore(refresh)
 
 let play_init () = 
-  ignore(mvwin !b_win 1 5);
-  ai_win := (newwin 12 (12 * 2 - 1) 1 30);
+  ignore(mvwin !b_win 1 30);
+  ai_win := (newwin 12 (12 * 2 - 1) 1 5);
   ignore(wclear !scr);
   ignore(wrefresh !scr)
 
@@ -113,11 +113,11 @@ let render_ai_board b win dt =
     done
   done
 
-let render b dt = 
+let render b opp_b phase dt = 
   Curses.box !b_win 0 0;
   Curses.box !ai_win 0 0;
   render_board b !b_win dt;
-  render_board b !ai_win dt;
+  render_ai_board opp_b !ai_win dt;
   Curses.wrefresh !b_win;
   Curses.wrefresh !ai_win;
   Sys.time ()

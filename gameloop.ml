@@ -9,9 +9,15 @@ let in_phase = ref Placement
 let ship_i = ref 0
 let starttime = Sys.time ()
 
+let opp_board = demo_opp_board
+
 let turn_count = ref 0
 
 let incr_turn () = turn_count := !turn_count + 1
+
+let int_of_phase = function 
+  | Placement -> 0
+  | Play -> 1
 
 (* Change later to display responsive results *)
 let handle_fire win b = 
@@ -79,21 +85,23 @@ let handle_input win b =
     | _ -> b
 
 (* Blank for now *)
-let ai_fire () = turn_count := !turn_count + 1
+let ai_fire opp_b = turn_count := !turn_count + 1; opp_b
 
-let rec play_game b t = 
+let rec play_game b opp_b t = 
   let dt = Sys.time () -. t in
-  let ntime = render b dt in
+  let ntime = render b opp_b (int_of_phase !in_phase) dt in
   if (!turn_count mod 2 = 0) then
     let b' = handle_input !Display.b_win b in
-    play_game b' ntime
-  else ai_fire (); play_game b t
+    play_game b' opp_b ntime
+  else 
+    let opp_b' = ai_fire opp_b in 
+    play_game b opp_b' t
 
 let main () = 
   let dt = Sys.time () -. starttime in
   print_string "Welcome!";
   change_phase Placement;
-  play_game demo_board dt
+  play_game demo_board opp_board dt
 
 let () = main ()
 
