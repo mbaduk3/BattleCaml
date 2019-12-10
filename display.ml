@@ -148,7 +148,9 @@ let render_ai_board b win dt =
           ignore(wattroff win Curses.WA.standout)
     end
     done
-  done
+  done;
+(* Use to render cur_time: *)
+  ignore(mvwaddstr win 9 1 (string_of_float !cur_timer))
 
 let render b opp_b phase dt = 
   Curses.box !b_win 0 0;

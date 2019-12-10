@@ -7,6 +7,8 @@ let in_phase = ref Placement
 
 (* Reference to the counter for the number of ships placed in placement phase *)
 let ship_i = ref 0
+
+let ship_coordinates = Array.make 5 (0, 0, 0, Horizontal)
 let starttime = Sys.time ()
 
 let opp_board = demo_opp_board
@@ -35,12 +37,72 @@ let handle_fire win b =
     | Contact m -> incr_turn (); m
     | _ -> failwith "Unimplemented"
 
-let place_ship matrix ship_i x y = 
+(* let place_ship matrix ship_i x y = 
   let ship_len = Array.length (List.nth ships ship_i) in 
   for i = 0 to (ship_len - 1) do 
     matrix.(y - 1).(x + i - 1) <- (List.nth ships ship_i).(i)
+  done *)
+let handle_rotate ship =
+  if snd ships.(ship) = Horizontal
+  then ships.(ship) <- (fst (ships.(ship)), Vertical)
+  else ships.(ship) <- (fst (ships.(ship)), Horizontal)
+
+let check_placement ship x y orientation =
+  let ship_len = Array.length (fst (ships.(ship))) in
+  for i = 0 to ship - 1 do
+    match ship_coordinates.(i) with
+    | (x', y', len', ori') -> if orientation = Horizontal && ori' = Horizontal
+      then
+        begin
+          if y = y' && (x + ship_len > x' && x + ship_len < x' + len'
+                        || x' + len' > x && x' < x)
+          then raise (Invalid_argument "ship cannot be placed here")
+        end
+      else if orientation = Horizontal && ori' = Vertical then
+        begin
+          if (y >= y' && y <= y' + len')
+          && (x < x' && x + ship_len > x' || x = x')
+          then raise (Invalid_argument "ship cannot be placed here")
+        end
+      else if orientation = Vertical && ori' = Horizontal then
+        begin
+          if (x >= x' && x <= x' + len')
+          && (y < y' && y + ship_len > y' || y = y')
+          then raise (Invalid_argument "ship cannot be placed here")
+        end
+      else if orientation = Vertical && ori' = Vertical then
+        begin
+          if x = x' && (y + ship_len > y' && y + ship_len < y' + len'
+                        || y' + len' > y && y' < y)
+          then raise (Invalid_argument "ship cannot be placed here")
+        end
   done
 
+let place_ship matrix ship x y rot = 
+  if rot then handle_rotate ship
+  else
+    let ship_len = Array.length (fst (ships.(ship))) in 
+    let orientation = snd (ships.(ship)) in
+    if (orientation = Horizontal && x + ship_len > 11)
+    || (orientation = Vertical && y + ship_len > 11)
+    then raise (Invalid_argument "ship is out of bounds")
+    else begin
+      for i = 0 to (ship_len - 1) do
+        if orientation = Horizontal then
+          begin
+            check_placement ship x y orientation;
+            matrix.(y - 1).(x + i - 1) <- (fst (ships.(ship))).(i);
+            ship_coordinates.(ship) <- (x, y, ship_len, orientation)
+          end
+        else
+          begin
+            check_placement ship x y orientation;
+            matrix.(y + i - 1).(x - 1) <- (fst (ships.(ship))).(i);
+            ship_coordinates.(ship) <- (x, y, ship_len, orientation)
+          end
+      done
+    end
+    
 (* Returns a crosshair matrix from a given ship matrix. 
    This is used for placement-phase highlighting *)
 let cross_mat_of_ship ship = 
@@ -60,45 +122,48 @@ let change_phase p =
         placement_init ()
     | Play -> 
         play_init ()
-
-let rec handle_placement win b =
+        
+let handle_placement win b rot =
   try
     if (!ship_i < 5) then 
       begin
         update_cur_ship ();
-        place_ship b !ship_i (!crosshair_x) !crosshair_y; 
-        incr ship_i;
-        if (!ship_i = 5) then change_phase Play else ()
+        place_ship b !ship_i (!crosshair_x) !crosshair_y rot;
+        if rot then ()
+        else 
+          incr ship_i;
+          if (!ship_i = 5) then change_phase Play else ()
       end
-      else 
+    else 
       (* TODO: include useful error message: "You have placed all the ships!" *)
       ()
   with 
-    | Invalid_argument e -> 
-        (*TODO: error message: "ship is out of bounds"*)
-        incr ship_i;
-        ()
+  | Invalid_argument e -> 
+    (*TODO: print error message [e]*)
+    ()
 
 let handle_input win b = 
   match get_key win with
-    | Down -> if !crosshair_y < 10 then incr crosshair_y 
-              else crosshair_y := 1;
-              cur_timer := 0.; b
-    | Up -> if !crosshair_y > 1 then decr crosshair_y
-            else crosshair_y := 10;
-            cur_timer := 0.; b
-    | Left -> if !crosshair_x > 1 then decr crosshair_x
-              else crosshair_x := 10;
-              cur_timer := 0.; b
-    | Right -> if !crosshair_x < 10 then incr crosshair_x
-                else crosshair_x := 1;
-                cur_timer := 0.; b
-    | Fire -> cur_timer := 0.;
-              handle_fire win b
-    | Place -> cur_timer := 0.;
-               handle_placement win b; b
-    | Quit -> exit_display (); b
-    | _ -> b
+  | Down -> if !crosshair_y < 10 then incr crosshair_y 
+    else crosshair_y := 1;
+    cur_timer := 0.; b
+  | Up -> if !crosshair_y > 1 then decr crosshair_y
+    else crosshair_y := 10;
+    cur_timer := 0.; b
+  | Left -> if !crosshair_x > 1 then decr crosshair_x
+    else crosshair_x := 10;
+    cur_timer := 0.; b
+  | Right -> if !crosshair_x < 10 then incr crosshair_x
+    else crosshair_x := 1;
+    cur_timer := 0.; b
+  | Fire -> cur_timer := 0.;
+    handle_fire win b
+  | Place -> cur_timer := 0.;
+    handle_placement win b false; b
+  | Rotate -> cur_timer := 0.;
+    handle_placement win b true; b
+  | Quit -> exit_display (); b
+  | _ -> b
 
 (* Blank for now *)
 let ai_fire opp_b = turn_count := !turn_count + 1; opp_b
@@ -120,4 +185,5 @@ let main () =
   play_game demo_board opp_board dt
 
 let () = main ()
+
 
