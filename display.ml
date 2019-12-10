@@ -21,9 +21,11 @@ let crosshair_y = ref 1
 let crosshair_mat = ref (Array.make_matrix 2 1 1)
 
 let hit_ch = int_of_char 'X'
+let collected_ch = int_of_char '+'
 let miss_ch = int_of_char '0'
 let unhit_ch = int_of_char '~'
 let empty_ch = int_of_char '.'
+let uncollected_ch = int_of_char 'o'
 
 let blue = Curses.Color.blue
 let red = Curses.Color.red
@@ -81,7 +83,7 @@ let check_cross () =
   then 
     false
   else if (!cur_y < !crosshair_y || 
-      !cur_y > (!crosshair_y + (Array.length !crosshair_mat.(0)) - 1))
+           !cur_y > (!crosshair_y + (Array.length !crosshair_mat.(0)) - 1))
   then 
     false
   else
@@ -144,11 +146,22 @@ let render_board b win phase dt =
     for j = 0 to (Array.length b.(0) - 1) do 
       begin
         if (check_cross ()) then
-          cur_blink_helper b win dt;
+          begin
+            cur_blink_helper b win dt
+          end;
+        match b.(i).(j) with 
         match b.(i).(j) with 
         | Hit -> handle_hit b win dt
         | Miss -> handle_miss b win dt
         | Unhit -> handle_unhit b win phase dt
+        | Collected ->
+          ignore (color_pair1 win);
+          ignore (wattroff win Curses.WA.standout);
+          if (check_cross ()) then
+            ignore (wattron win (Curses.WA.color_pair 1));
+          ignore (Curses.mvwaddch win !cur_y (!cur_x*2) collected_ch);
+          incr_cur b;
+          ignore (wattroff win (Curses.WA.color_pair 1))
         | _ -> handle_misc b win dt
       end
     done
@@ -186,6 +199,10 @@ let render_ai_board b win phase dt =
         | Hit -> handle_hit_ai b win dt
         | Miss -> handle_miss_ai b win dt
         | Unhit -> handle_unhit_ai b win phase dt
+        | Collected ->
+          ignore(Curses.mvwaddch win !cur_y (!cur_x*2) collected_ch); 
+          incr_cur b;
+          ignore(wattroff win Curses.WA.standout)
         | _ -> handle_misc_ai b win dt
     end
     done
@@ -227,7 +244,6 @@ let render_phase phase =
 let menu_helper win phase dt = 
   Curses.box win 0 0
   
-
 let render b opp_b phase turn dt =
   begin
   match phase with 
