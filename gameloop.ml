@@ -32,13 +32,12 @@ let handle_fire win b =
   if (!ship_i != 5) then b 
   else
   let (x, y) = (!crosshair_y - 1, !crosshair_x - 1) in
-  turn_count := !turn_count + 1;
   let res = Gameboard.fire (x, y) b in
   match res with 
     | No_contact m -> incr_turn (); m
     | Already_hit m -> m 
     | Already_miss m -> m 
-    | Contact m -> m
+    | Contact m -> incr_turn (); m
     | _ -> failwith "Unimplemented"
 
 (* let place_ship matrix ship_i x y = 
