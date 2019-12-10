@@ -11,7 +11,7 @@ let ship_i = ref 0
 let ship_coordinates = Array.make 5 (0, 0, 0, Horizontal)
 let starttime = Sys.time ()
 
-let opp_board = demo_opp_board
+let opp_board1 = demo_opp_board
 let bullets = (Array.make_matrix 1 1 1)::[]
 
 
@@ -27,10 +27,10 @@ let int_of_phase = function
 let handle_fire win b = 
   if (!ship_i != 5) then b 
   else
-  let (x, y) = (!crosshair_y - 1, !crosshair_x - 1) in
-  turn_count := !turn_count + 1;
-  let res = Gameboard.fire (x, y) b in
-  match res with 
+    let (x, y) = (!crosshair_y - 1, !crosshair_x - 1) in
+    turn_count := !turn_count + 1;
+    let res = Gameboard.fire (x, y) b in
+    match res with 
     | No_contact m -> incr_turn (); m
     | Already_hit m -> m 
     | Already_miss m -> m 
@@ -38,8 +38,8 @@ let handle_fire win b =
     | _ -> failwith "Unimplemented"
 
 (* let place_ship matrix ship_i x y = 
-  let ship_len = Array.length (List.nth ships ship_i) in 
-  for i = 0 to (ship_len - 1) do 
+   let ship_len = Array.length (List.nth ships ship_i) in 
+   for i = 0 to (ship_len - 1) do 
     matrix.(y - 1).(x + i - 1) <- (List.nth ships ship_i).(i)
   done *)
 
@@ -104,7 +104,7 @@ let place_ship matrix ship x y rot =
           end
       done
     end
-    
+
 (* Returns a crosshair matrix from a given ship matrix. 
    This is used for placement-phase highlighting *)
 let cross_mat_of_ship ship orient = 
@@ -146,13 +146,11 @@ let handle_placement win b rot =
           if not rot then incr ship_i;
           if (!ship_i = 5) then change_phase Play else ()
       end
-    else 
-      (* TODO: include useful error message: "You have placed all the ships!" *)
-      ()
+    else ()
+  (* TODO: include useful error message: "You have placed all the ships!" *)
   with 
-  | Invalid_argument e -> 
-    (*TODO: print error message [e]*)
-    ()
+  | Invalid_argument e -> ()
+(*TODO: print error message [e]*)
 
 let handle_input win b = 
   match get_key win with
@@ -180,6 +178,22 @@ let handle_input win b =
 (* Blank for now *)
 let ai_fire opp_b = turn_count := !turn_count + 1; opp_b
 
+let ai_placement =
+  let count = ref 0 in
+  let m = init_matrix () in
+  while !count < 5 do
+    try
+      let x = Random.int 10 in
+      let y = Random.int 10 in
+      let rot = Random.bool () in
+      place_ship m !count x y rot;
+      if rot then ()
+      else incr count;
+    with
+    | Invalid_argument e -> ()
+  done;
+  m
+
 let rec play_game b opp_b t = 
   let dt = Sys.time () -. t in
   let ntime = render b opp_b (int_of_phase !in_phase) dt in
@@ -195,7 +209,7 @@ let main () =
   let dt = Sys.time () -. starttime in
   print_string "Welcome!";
   change_phase Placement;
-  play_game demo_board opp_board dt
+  play_game demo_board ai_placement dt
 
 let () = main ()
 
