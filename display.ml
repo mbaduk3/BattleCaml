@@ -2,6 +2,9 @@ open Curses
 open Gameboard
 
 let scr = ref (initscr ())
+(* Max x, y are the dimensions of the terminal window *)
+let max_x = ref 0
+let max_y = ref 0
 let () = 
   ignore(Curses.cbreak ());
   ignore(Curses.noecho ());
@@ -46,6 +49,7 @@ let incr_cur b =
 
 (* Initalize the placement phase windows *)
 let placement_init () = 
+  ignore(wclear !scr);
   let y,x = getmaxyx !scr in
   b_win := (newwin 12 (12 * 2 - 1) 1 5);
   ignore(Curses.nodelay !b_win true);
@@ -53,7 +57,7 @@ let placement_init () =
   meta_win := (newwin 9 15 6 54);
   err_win := (newwin 3 40 15 29);
   ignore(mvwin !b_win 3 29);
-  ignore(refresh)
+  ignore(wrefresh !scr)
 
 (* Initalize the play phase windows *)
 let play_init () = 
@@ -72,7 +76,9 @@ let play_init () =
 
 (* Initalize the menu phase windows *)
 let menu_init () = 
-  sel_win := (newwin 12 (12 * 2 - 1) 1 5)
+  sel_win := (newwin (!max_y / 2) (50) 4 25);
+  ignore(mvwaddstr !sel_win 1 1 "BattleCaml");
+  ignore(mvwaddstr !sel_win 3 1 "Press 'p' to play")
 
 
 (* True if the drawing cursor coordinates are equal to a crosshair coord.
@@ -226,13 +232,27 @@ let str_of_phase = function
 let render_phase phase = 
   ignore(mvwaddstr !meta_win 2 1 phase)
 
+let menu_refresh () = 
+  ignore(mvwin !sel_win (!max_y / 2) (!max_x / 2));
+  ignore(mvwhline !scr 3 0 0 1000);
+  ignore(mvwhline !scr (!max_y - 3) 0 0 1000)
+
+
 let menu_helper win phase dt = 
-  (* Curses.box win 0 0; *)
-  Curses.box !sel_win 0 0
+  menu_init ();
+  menu_refresh ();
+  ignore(mvwaddstr !sel_win 4 8 (string_of_int !max_y))
+
   
+(* Refreshes max_x, max_y to the current terminal size *)
+let update_maxs () =
+  let y,x = getmaxyx !scr in 
+  max_x := x;
+  max_y := y
 
 let render b opp_b phase turn dt =
   begin
+  update_maxs ();
   match phase with 
     | 0 -> 
       Curses.wborder !b_win 0 0 0 0 0 0 0 0;
