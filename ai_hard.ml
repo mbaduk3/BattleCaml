@@ -11,8 +11,6 @@ let determine_hard_fire () =
   let elt = Random.int 2 in
   List.nth fire_lst elt
 
-type orientation = Vertical | Horizontal
-
 (* [get_all_empty_coords miss_coords] returns a list of coordinate pairs representing
 the coordinates of type Empty. *)
 let get_all_empty_coords m = 
@@ -122,7 +120,7 @@ let ai_fire m =
   match determine_hard_fire () with
     | true -> let (x, y) = (get_coord_of_hit curr_ship) in
               m.(x).(y) <- Hit;
-              Contact m
+              m
     | false -> let (x, y) = get_empty_coord (get_all_empty_coords m) in
                m.(x).(y) <- Miss;
-               No_contact m
+              m
