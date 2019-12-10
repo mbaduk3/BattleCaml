@@ -221,13 +221,25 @@ let ai_placement () =
 let rec play_game b opp_b t = 
   let dt = Sys.time () -. t in
   let ntime = render b opp_b (int_of_phase !in_phase) dt in
-  if (!in_phase = Placement) then update_cur_ship ();
-  if (!turn_count mod 2 = 0) then
-    let b' = handle_input !Display.b_win b in
-    play_game b' opp_b ntime
+  if (!in_phase = Placement) then 
+  begin
+    update_cur_ship ();
+    if (!turn_count mod 2 = 0) then
+      let b' = handle_input !Display.b_win b in
+      play_game b' opp_b ntime
+    else 
+      let opp_b' = ai_fire opp_b in 
+      play_game b opp_b' t
+  end
   else 
-    let opp_b' = ai_fire opp_b in 
-    play_game b opp_b' t
+  begin
+    if (!turn_count mod 2 = 0) then
+      let opp_b' = handle_input !Display.b_win opp_b in
+      play_game b opp_b' ntime
+    else 
+      let b' = ai_fire b in 
+      play_game b' opp_b t
+  end
 
 let main () = 
   let dt = Sys.time () -. starttime in

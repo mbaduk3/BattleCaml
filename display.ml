@@ -199,8 +199,16 @@ let render b opp_b phase dt =
   Curses.box !score_win 0 0;
   Curses.box !meta_win 0 0;
   Curses.box !err_win 0 0;
-  render_board b !b_win dt;
-  render_ai_board opp_b !ai_win dt;
+  if (phase = 0) then 
+    begin
+    render_board b !b_win dt;
+    render_ai_board opp_b !ai_win dt
+    end
+  else 
+    begin
+    render_board opp_b !ai_win dt;
+    render_ai_board b !b_win dt
+    end;
   render_names phase;
   render_score 0;
   Curses.wrefresh !b_win;
