@@ -11,7 +11,7 @@ let b_win = ref (newwin 12 (12 * 2 - 1) 1 5)
 let ai_win = ref null_window
 let score_win = ref (newwin 3 15 3 54)
 let meta_win = ref (newwin 9 15 6 54)
-let err_win = ref (newwin 3 43 17 15)
+let err_win = ref (newwin 3 40 15 29)
 let () = 
   ignore(Curses.nodelay !b_win true)
 let cur_x = ref 1
@@ -56,6 +56,10 @@ let play_init () =
   ai_win := (newwin 12 (12 * 2 - 1) 3 20);
   ignore(mvwin !score_win 3 70);
   ignore(mvwin !meta_win 6 70);
+  ignore(mvwin !err_win 15 20);
+  ignore(wresize !err_win 3 65);
+  ignore(wclear !err_win);
+  ignore(wrefresh !err_win);
   ignore(wclear !scr);
   ignore(wrefresh !scr)
 
