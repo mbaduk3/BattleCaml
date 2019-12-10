@@ -8,8 +8,10 @@ type t = entry array array
 
 type ship = t
 
-type response =  Contact of t | No_contact of t | 
-                 Already_hit of t | Already_miss of t | Misc
+type response = Contact of t | No_contact of t | 
+                Already_hit of t | Already_miss of t | Misc
+
+type orientation = Vertical | Horizontal
 
 exception Malformed 
 exception Out_of_bounds 
@@ -46,13 +48,12 @@ let get_array_from i j arr =
 let create_ship len = Array.make len Unhit
 
 (* The standard game ship suite *)
-let caml_5 = create_ship 5
-let caml_4 = create_ship 4
-let caml_3 = create_ship 3
-let caml_3' = create_ship 3
-let caml_2 = create_ship 2
-
-let ships = caml_5 :: caml_4 :: caml_3 :: caml_3' :: caml_2 :: []
+let ships = Array.make 5 (Array.make 0 Unhit, Horizontal)
+let caml_5 = ships.(0) <- (create_ship 5, Horizontal)
+let caml_4 = ships.(1) <- (create_ship 4, Horizontal)
+let caml_3 = ships.(2) <- (create_ship 3, Horizontal)
+let caml_3' = ships.(3) <- (create_ship 3, Horizontal)
+let caml_2 = ships.(4) <- (create_ship 2, Horizontal)
 
 (* The single-character representation of Entry [e]. *)
 let string_of_entry e = 
