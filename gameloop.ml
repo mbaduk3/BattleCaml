@@ -9,17 +9,22 @@ let in_phase = ref Placement
 let ship_i = ref 0
 let starttime = Sys.time ()
 
+let turn_count = ref 0
+
+let incr_turn () = turn_count := !turn_count + 1
+
 (* Change later to display responsive results *)
 let handle_fire win b = 
   if (!ship_i != 5) then b 
   else
   let (x, y) = (!crosshair_y - 1, !crosshair_x - 1) in
+  turn_count := !turn_count + 1;
   let res = Gameboard.fire (x, y) b in
   match res with 
-    | No_contact m -> m
+    | No_contact m -> incr_turn (); m
     | Already_hit m -> m 
     | Already_miss m -> m 
-    | Contact m -> m
+    | Contact m -> incr_turn (); m
     | _ -> failwith "Unimplemented"
 
 let place_ship matrix ship x y = 
@@ -73,13 +78,16 @@ let handle_input win b =
     | Quit -> exit_display (); b
     | _ -> b
 
+(* Blank for now *)
+let ai_fire () = turn_count := !turn_count + 1
 
 let rec play_game b t = 
   let dt = Sys.time () -. t in
   let ntime = render b dt in
-  let b' = handle_input !Display.b_win b in
-  play_game b' ntime
-
+  if (!turn_count mod 2 = 0) then
+    let b' = handle_input !Display.b_win b in
+    play_game b' ntime
+  else ai_fire (); play_game b t
 
 let main () = 
   let dt = Sys.time () -. starttime in

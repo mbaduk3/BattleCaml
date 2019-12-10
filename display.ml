@@ -22,6 +22,7 @@ let unhit_ch = int_of_char '~'
 let empty_ch = int_of_char '.'
 
 let cur_timer = ref 0. 
+let turn_count = ref 0
 
 let incr_cur b = 
   cur_x := !cur_x + 1;
