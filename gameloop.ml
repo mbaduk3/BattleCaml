@@ -2,8 +2,8 @@ open Gameboard
 open Display
 open Command
 
-type phase = Placement | Play
-let in_phase = ref Placement
+type phase = Placement | Play | Menu
+let in_phase = ref Menu
 
 (* Reference to the counter for the number of ships placed in placement phase *)
 let ship_i = ref 0
@@ -21,6 +21,7 @@ let incr_turn () = turn_count := !turn_count + 1
 let int_of_phase = function 
   | Placement -> 0
   | Play -> 1
+  | Menu -> 2
 
 (* Change later to display responsive results *)
 let handle_fire win b = 
@@ -158,6 +159,8 @@ let change_phase p =
     | Play -> 
         play_init ();
         in_phase := Play
+    | Menu -> 
+        in_phase := Menu
         
 let handle_placement win b rot =
   try
@@ -176,6 +179,12 @@ let handle_placement win b rot =
   with 
   | Invalid_argument e -> ()
 (*TODO: print error message [e]*)
+
+let handle_input_menu win b = 
+  match get_key win with 
+  | Quit -> ignore(exit_display ()); b 
+  | Place -> change_phase Placement; b
+  | _ -> b
 
 let handle_input win b = 
   match get_key win with
@@ -197,12 +206,13 @@ let handle_input win b =
     handle_placement win b false; b
   | Rotate -> cur_timer := 0.;
     handle_placement win b true; b
-  | Quit -> exit_display (); b
+  | Quit -> ignore(exit_display ()); b
   | _ -> b
 
 (* Blank for now *)
 let ai_fire opp_b = turn_count := !turn_count + 1; opp_b
 
+(* Generates a random board with placed ships for the ai *)
 let ai_placement () =
   let count = ref 0 in
   let m = Array.make_matrix 10 10 Empty in
@@ -225,30 +235,36 @@ let ai_placement () =
 let rec play_game b opp_b t = 
   let dt = Sys.time () -. t in
   let ntime = render b opp_b (int_of_phase !in_phase) !turn_count dt in
-  if (!in_phase = Placement) then 
-  begin
-    update_cur_ship ();
-    if (!turn_count mod 2 = 0) then
-      let b' = handle_input !Display.b_win b in
-      play_game b' opp_b ntime
-    else 
-      let opp_b' = ai_fire opp_b in 
-      play_game b opp_b' t
-  end
-  else 
-  begin
-    if (!turn_count mod 2 = 0) then
-      let opp_b' = handle_input !Display.b_win opp_b in
-      play_game b opp_b' ntime
-    else 
-      let b' = ai_fire b in 
-      play_game b' opp_b t
-  end
+  match !in_phase with 
+  | Placement -> 
+    begin
+      update_cur_ship ();
+      if (!turn_count mod 2 = 0) then
+        let b' = handle_input !Display.b_win b in
+        play_game b' opp_b ntime
+      else 
+        let opp_b' = ai_fire opp_b in 
+        play_game b opp_b' t
+    end
+  | Play ->
+    begin
+      if (!turn_count mod 2 = 0) then
+        let opp_b' = handle_input !Display.b_win opp_b in
+        play_game b opp_b' ntime
+      else 
+        let b' = ai_fire b in 
+        play_game b' opp_b t
+    end
+  | Menu -> 
+    begin 
+      ignore(handle_input_menu !b_win b);
+      play_game b opp_b t
+    end
 
 let main () = 
   let dt = Sys.time () -. starttime in
   print_string "Welcome!";
-  change_phase Placement;
+  change_phase Menu;
   play_game demo_board (ai_placement ()) dt
 
 let () = main ()

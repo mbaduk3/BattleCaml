@@ -189,7 +189,7 @@ let render_names_placement () =
   mvwaddstr !scr 2 30 "My board:"
 
 let render_names_play () = 
-  mvwaddstr !scr 2 46 "My board:";
+  ignore(mvwaddstr !scr 2 46 "My board:");
   mvwaddstr !scr 2 19 "AI board:"
 
 let render_names phase = 
@@ -210,6 +210,8 @@ let render_turn turn =
 let str_of_phase = function 
   | 0 -> "Placement"
   | 1 -> "Play" 
+  | 2 -> "Menu"
+  | _ -> raise Out_of_bounds
 
 let render_phase phase = 
   ignore(mvwaddstr !meta_win 2 1 phase)
