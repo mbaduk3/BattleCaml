@@ -12,6 +12,7 @@ let ai_win = ref null_window
 let score_win = ref null_window
 let meta_win = ref null_window
 let err_win = ref null_window
+let sel_win = ref null_window
 let cur_x = ref 1
 let cur_y = ref 1
 (* Crosshair x and y refer to the top-left coord of the crosshair matrix *)
@@ -70,7 +71,8 @@ let play_init () =
   ignore(wrefresh !scr)
 
 (* Initalize the menu phase windows *)
-let menu_init () = ()
+let menu_init () = 
+  sel_win := (newwin 12 (12 * 2 - 1) 1 5)
 
 
 (* True if the drawing cursor coordinates are equal to a crosshair coord.
@@ -225,7 +227,8 @@ let render_phase phase =
   ignore(mvwaddstr !meta_win 2 1 phase)
 
 let menu_helper win phase dt = 
-  Curses.box win 0 0
+  (* Curses.box win 0 0; *)
+  Curses.box !sel_win 0 0
   
 
 let render b opp_b phase turn dt =
@@ -236,28 +239,34 @@ let render b opp_b phase turn dt =
       Curses.box !score_win 0 0;
       Curses.box !meta_win 0 0;
       Curses.box !err_win 0 0;
-      render_board b !b_win phase dt
+      render_board b !b_win phase dt;
+      render_names phase;
+      render_score 0;
+      render_turn turn;
+      render_err "Welcome to battleCaml!";
+      render_phase (str_of_phase phase);
     | 1 -> 
       Curses.wborder !b_win 0 0 0 0 0 0 0 0;
       Curses.box !ai_win 0 0;
       Curses.box !score_win 0 0;
       Curses.box !meta_win 0 0;
       Curses.box !err_win 0 0;
+      render_names phase;
+      render_score 0;
+      render_turn turn;
+      render_err "Welcome to battleCaml!";
+      render_phase (str_of_phase phase);
       render_board opp_b !ai_win phase dt;
       render_ai_board b !b_win phase dt
     | 2 -> menu_helper !scr phase dt
     | _ -> ()
   end;
-  render_names phase;
-  render_score 0;
-  render_turn turn;
-  render_err "Welcome to battleCaml!";
-  render_phase (str_of_phase phase);
   Curses.wrefresh !b_win;
   Curses.wrefresh !score_win;
   Curses.wrefresh !ai_win;
   Curses.wrefresh !err_win;
   Curses.wrefresh !meta_win;
+  Curses.wrefresh !sel_win;
   Curses.wrefresh !scr;
   Sys.time ()
 

@@ -163,6 +163,7 @@ let change_phase p =
         play_init ();
         in_phase := Play
     | Menu -> 
+        menu_init ();
         in_phase := Menu
         
 let handle_placement win b rot =
