@@ -72,6 +72,9 @@ let get_row m num = m.(num)
 let demo_board = 
   init_matrix ()
 
+let opp_board =
+  init_matrix ()
+
 let demo_opp_board = 
   let m = init_matrix () in 
   for row = 0 to 5 do 
