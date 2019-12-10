@@ -97,7 +97,7 @@ let handle_hit b win dt =
   ignore (color_pair1 win);
   ignore (wattroff win Curses.WA.standout);
   if (check_cross ()) then
-  ignore (wattron win (Curses.WA.color_pair 1));
+    ignore (wattron win (Curses.WA.color_pair 1));
   ignore(Curses.mvwaddch win !cur_y (!cur_x*2) hit_ch);
   incr_cur b;
   ignore (wattroff win (Curses.WA.color_pair 1))
@@ -106,14 +106,15 @@ let handle_miss b win dt =
   ignore (color_pair1 win);
   ignore (wattroff win Curses.WA.standout);
   if (check_cross ()) then
-  ignore (wattron win (Curses.WA.color_pair 1));
+    ignore (wattron win (Curses.WA.color_pair 1));
   ignore(Curses.mvwaddch win !cur_y (!cur_x*2) miss_ch);
   incr_cur b;
   ignore (wattroff win (Curses.WA.color_pair 1))
 
 let handle_unhit b win phase dt = 
   if (phase = 1) then 
-    ignore(Curses.mvwaddch win !cur_y (!cur_x*2) empty_ch)
+    (*To show ai ships, toggle this last option *)
+    ignore(Curses.mvwaddch win !cur_y (!cur_x*2) unhit_ch)
   else 
     ignore(Curses.mvwaddch win !cur_y (!cur_x*2) unhit_ch);
   incr_cur b;
@@ -127,14 +128,14 @@ let handle_misc b win dt =
 let cur_blink_helper b win dt = 
   if (1000. *. !cur_timer < 35.) then 
     begin
-    ignore(wattroff win Curses.WA.protect);
-    ignore(wattron win Curses.WA.standout)
+      ignore(wattroff win Curses.WA.protect);
+      ignore(wattron win Curses.WA.standout)
     end;
   if (1000. *. !cur_timer > 50.) then 
     begin
-    ignore(wattr_off win Curses.WA.standout);
-    ignore(cur_timer := 0.);
-    ignore(wattron win Curses.WA.protect)
+      ignore(wattr_off win Curses.WA.standout);
+      ignore(cur_timer := 0.);
+      ignore(wattron win Curses.WA.protect)
     end
 
 let render_board b win phase dt =
@@ -150,7 +151,6 @@ let render_board b win phase dt =
             cur_blink_helper b win dt
           end;
         match b.(i).(j) with 
-        match b.(i).(j) with 
         | Hit -> handle_hit b win dt
         | Miss -> handle_miss b win dt
         | Unhit -> handle_unhit b win phase dt
@@ -162,12 +162,20 @@ let render_board b win phase dt =
           ignore (Curses.mvwaddch win !cur_y (!cur_x*2) collected_ch);
           incr_cur b;
           ignore (wattroff win (Curses.WA.color_pair 1))
+        | Uncollected p -> 
+          ignore (color_pair1 win);
+          ignore (wattroff win Curses.WA.standout);
+          if (check_cross ()) then
+            ignore (wattron win (Curses.WA.color_pair 1));
+          ignore (Curses.mvwaddch win !cur_y (!cur_x*2) uncollected_ch);
+          incr_cur b;
+          ignore (wattroff win (Curses.WA.color_pair 1))
         | _ -> handle_misc b win dt
       end
     done
   done
-  (* Use to render cur_time: *)
-  (* (ignore(mvwaddstr win 9 1 (string_of_float !cur_timer))) *)
+(* Use to render cur_time: *)
+(* (ignore(mvwaddstr win 9 1 (string_of_float !cur_timer))) *)
 
 let handle_hit_ai b win dt = 
   ignore(Curses.mvwaddch win !cur_y (!cur_x*2) hit_ch); 
@@ -194,8 +202,8 @@ let render_ai_board b win phase dt =
   cur_y := 1;
   for i = 0 to Array.length b - 1 do 
     for j = 0 to (Array.length b.(0) - 1) do 
-    begin 
-    match b.(i).(j) with 
+      begin 
+        match b.(i).(j) with 
         | Hit -> handle_hit_ai b win dt
         | Miss -> handle_miss_ai b win dt
         | Unhit -> handle_unhit_ai b win phase dt
@@ -204,11 +212,11 @@ let render_ai_board b win phase dt =
           incr_cur b;
           ignore(wattroff win Curses.WA.standout)
         | _ -> handle_misc_ai b win dt
-    end
+      end
     done
   done
 (* Use to render cur_time: *)
-  (* ignore(mvwaddstr win 9 1 (string_of_float !cur_timer)) *)
+(* ignore(mvwaddstr win 9 1 (string_of_float !cur_timer)) *)
 
 let render_names_placement () = 
   mvwaddstr !scr 2 30 "My board:"
@@ -243,10 +251,10 @@ let render_phase phase =
 
 let menu_helper win phase dt = 
   Curses.box win 0 0
-  
+
 let render b opp_b phase turn dt =
   begin
-  match phase with 
+    match phase with 
     | 0 -> 
       Curses.wborder !b_win 0 0 0 0 0 0 0 0;
       Curses.box !score_win 0 0;

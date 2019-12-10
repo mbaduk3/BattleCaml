@@ -2,7 +2,9 @@
 
 type coord = (int * int)
 
-type entry = Hit | Miss | Unhit | Empty | Collected | Uncollected
+type powerup = Sea_mine | Bomb | Double_bullet | Points | Repair_kit
+
+type entry = Hit | Miss | Unhit | Empty | Collected | Uncollected of powerup
 
 type t = entry array array
 
@@ -12,8 +14,6 @@ type response = Contact of t | No_contact of t |
                 Already_hit of t | Already_miss of t | Misc
 
 type orientation = Vertical | Horizontal
-
-type powerup = Sea_mine | Bomb | Double_bullet | Points | Repair_kit
 
 exception Malformed 
 exception Out_of_bounds
@@ -76,7 +76,7 @@ let string_of_entry e =
   | Miss -> "M" 
   | Unhit -> "." 
   | Empty -> "." 
-  | Uncollected -> "."
+  | Uncollected p -> "."
 
 (* Returns n % m, handling negative numbers *)
 let new_mod n m = (n + m) mod m
@@ -96,6 +96,71 @@ let transpose m =
 (* Returns the value at the x, y coordinates contained in [c], of matrix [m] *)
 let get_val_of_coord (m:t) (c:coord) = m.(fst c).(snd c)
 
+let check_explosion x y m =
+  if m.(x).(y) = Unhit then m.(x).(y) <- Hit
+  else m.(x).(y) <- Miss
+
+let handle_powerup c m p = 
+  if p = Sea_mine 
+  then if fst c = 0 && snd c = 0 then begin
+      check_explosion (fst c) (snd c + 1) m;
+      check_explosion (fst c + 1) (snd c) m;
+      check_explosion (fst c + 1) (snd c + 1) m;
+    end
+    else if fst c = 0 && snd c = 9 then begin
+      check_explosion (fst c) (snd c - 1) m;
+      check_explosion (fst c + 1) (snd c - 1) m;
+      check_explosion (fst c + 1) (snd c) m;
+    end
+    else if fst c = 9 && snd c = 0 then begin
+      check_explosion (fst c - 1) (snd c) m;
+      check_explosion (fst c - 1) (snd c + 1) m;
+      check_explosion (fst c) (snd c + 1) m;
+    end
+    else if fst c = 9 && snd c = 9 then begin
+      check_explosion (fst c - 1) (snd c - 1) m;
+      check_explosion (fst c - 1) (snd c) m;
+      check_explosion (fst c) (snd c + 1) m;
+    end
+    else if fst c = 0 then begin
+      check_explosion (fst c) (snd c - 1) m;
+      check_explosion (fst c) (snd c + 1) m;
+      check_explosion (fst c + 1) (snd c - 1) m;
+      check_explosion (fst c + 1) (snd c) m;
+      check_explosion (fst c + 1) (snd c + 1) m;
+    end
+    else if snd c = 0 then begin
+      check_explosion (fst c - 1) (snd c) m;
+      check_explosion (fst c + 1) (snd c) m;
+      check_explosion (fst c - 1) (snd c + 1) m;
+      check_explosion (fst c) (snd c + 1) m;
+      check_explosion (fst c + 1) (snd c + 1) m;
+    end
+    else if fst c = 9 then begin
+      check_explosion (fst c - 1) (snd c - 1) m;
+      check_explosion (fst c - 1) (snd c) m;
+      check_explosion (fst c - 1) (snd c + 1) m;
+      check_explosion (fst c) (snd c - 1) m;
+      check_explosion (fst c) (snd c + 1) m;
+    end
+    else if snd c = 9 then begin
+      check_explosion (fst c - 1) (snd c - 1) m;
+      check_explosion (fst c - 1) (snd c) m;
+      check_explosion (fst c) (snd c - 1) m;
+      check_explosion (fst c + 1) (snd c - 1) m;
+      check_explosion (fst c + 1) (snd c) m;
+    end
+    else begin
+      check_explosion (fst c - 1) (snd c - 1) m;
+      check_explosion (fst c - 1) (snd c) m;
+      check_explosion (fst c - 1) (snd c + 1) m;
+      check_explosion (fst c) (snd c - 1) m;
+      check_explosion (fst c) (snd c + 1) m;
+      check_explosion (fst c + 1) (snd c - 1) m;
+      check_explosion (fst c + 1) (snd c) m;
+      check_explosion (fst c + 1) (snd c + 1) m;
+    end
+
 (* Changes the board [m] based on the entry value at coordinates [c]. Returns 
    a response type containing the new board [fire c m]. *)
 let fire (c:coord) m = 
@@ -105,7 +170,8 @@ let fire (c:coord) m =
   | Collected -> Already_hit m
   | Miss -> Already_miss m
   | Unhit -> m.(fst c).(snd c) <- Hit; Contact m
-  | Uncollected -> m.(fst c).(snd c) <- Collected; Contact m
+  | Uncollected p -> m.(fst c).(snd c) <- Collected;
+    handle_powerup c m p; Contact m
 
 let second_elt lst = List.nth lst 1
 let third_elt lst = List.nth lst 2

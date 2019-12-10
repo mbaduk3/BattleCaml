@@ -31,9 +31,9 @@ let int_of_phase = function
 let handle_fire win b = 
   if (!ship_i != 5) then b 
   else
-  let (x, y) = (!crosshair_y - 1, !crosshair_x - 1) in
-  let res = Gameboard.fire (x, y) b in
-  match res with 
+    let (x, y) = (!crosshair_y - 1, !crosshair_x - 1) in
+    let res = Gameboard.fire (x, y) b in
+    match res with 
     | No_contact m -> incr_turn (); m
     | Already_hit m -> m 
     | Already_miss m -> m 
@@ -41,8 +41,8 @@ let handle_fire win b =
     | _ -> failwith "Unimplemented"
 
 (* let place_ship matrix ship_i x y = 
-  let ship_len = Array.length (List.nth ships ship_i) in 
-  for i = 0 to (ship_len - 1) do 
+   let ship_len = Array.length (List.nth ships ship_i) in 
+   for i = 0 to (ship_len - 1) do 
     matrix.(y - 1).(x + i - 1) <- (List.nth ships ship_i).(i)
    done *)
 
@@ -108,14 +108,14 @@ let place_ship matrix ships ship x y rot =
                 matrix.(y - 1).(x + i - 1) <- (fst (ships.(ship))).(i);
                 ship_coordinates.(ship) <- (x, y, ship_len, orientation);
               end
-            end
+          end
         else
           begin
             if ships = opp_ships
-              then
-                begin
-                  check_placement opp_coordinates opp_ships ship x y orientation;
-                  matrix.(y + i - 1).(x - 1) <- (fst (opp_ships.(ship))).(i);
+            then
+              begin
+                check_placement opp_coordinates opp_ships ship x y orientation;
+                matrix.(y + i - 1).(x - 1) <- (fst (opp_ships.(ship))).(i);
                 opp_coordinates.(ship) <- (x, y, ship_len, orientation)
               end
             else
@@ -124,10 +124,10 @@ let place_ship matrix ships ship x y rot =
                 matrix.(y + i - 1).(x - 1) <- (fst (ships.(ship))).(i);
                 ship_coordinates.(ship) <- (x, y, ship_len, orientation)
               end
-            end
+          end
       done
     end
-    
+
 (* Returns a crosshair matrix from a given ship matrix. 
    This is used for placement-phase highlighting *)
 let cross_mat_of_ship ship orient = 
@@ -149,22 +149,22 @@ let update_cur_ship () =
   else
     let s,orient = Array.get ships (!ship_i) in
     crosshair_mat := cross_mat_of_ship s (orient)
-    
+
 (* Changes the internal phase of the game *)
 let change_phase p =
   update_cur_ship ();
   match p with 
-    | Placement -> 
-        let s,orient = Array.get ships (!ship_i) in 
-        crosshair_mat := cross_mat_of_ship s orient;
-        placement_init ();
-        in_phase := Placement
-    | Play -> 
-        play_init ();
-        in_phase := Play
-    | Menu -> 
-        in_phase := Menu
-        
+  | Placement -> 
+    let s,orient = Array.get ships (!ship_i) in 
+    crosshair_mat := cross_mat_of_ship s orient;
+    placement_init ();
+    in_phase := Placement
+  | Play -> 
+    play_init ();
+    in_phase := Play
+  | Menu -> 
+    in_phase := Menu
+
 let handle_placement win b rot =
   try
     if (!ship_i < 5) then 
@@ -178,10 +178,10 @@ let handle_placement win b rot =
         if (!ship_i = 5) then change_phase Play else ()
       end
     else update_cur_ship ()
-      (* TODO: include useful error message: "You have placed all the ships!" *)
+  (* TODO: include useful error message: "You have placed all the ships!" *)
   with 
   | Invalid_argument e -> ()
-    (*TODO: print error message [e]*)
+(*TODO: print error message [e]*)
 
 let handle_input_menu win b = 
   match get_key win with 
@@ -225,10 +225,10 @@ let ai_placement () =
     try
       Random.self_init ();
       if Random.bool ()
-      then place_ship m opp_ships !count (Random.int 10) (Random.int 10) true
+      then place_ship m opp_ships !count (Random.int 11) (Random.int 11) true
       else
         begin
-          place_ship m opp_ships !count (Random.int 10) (Random.int 10) false;
+          place_ship m opp_ships !count (Random.int 11) (Random.int 11) false;
           incr count
         end
     with
@@ -236,9 +236,9 @@ let ai_placement () =
   done;
   m
 
-let check_overlap matrix x y =
+let check_overlap matrix x y p =
   if matrix.(y - 1).(x - 1) = Empty
-  then matrix.(y - 1).(x - 1) <- Uncollected
+  then matrix.(y - 1).(x - 1) <- Uncollected p
   else raise (Invalid_argument "powerup cannot be placed here")
 
 let powerup_placement powerups = 
@@ -249,7 +249,7 @@ let powerup_placement powerups =
       | [] -> ()
       | h :: t -> try
           Random.self_init ();
-          check_overlap m (Random.int 10) (Random.int 10);
+          check_overlap m (Random.int 11) (Random.int 11) h;
           place t
         with
         | Invalid_argument e -> place (h :: t)
@@ -263,14 +263,14 @@ let rec play_game b opp_b t =
   match !in_phase with 
   | Placement -> 
     begin
-    update_cur_ship ();
-    if (!turn_count mod 2 = 0) then
-      let b' = handle_input !Display.b_win b in
-      play_game b' opp_b ntime
-    else 
-      let opp_b' = ai_fire opp_b in 
-      play_game b opp_b' t
-      end
+      update_cur_ship ();
+      if (!turn_count mod 2 = 0) then
+        let b' = handle_input !Display.b_win b in
+        play_game b' opp_b ntime
+      else 
+        let opp_b' = ai_fire opp_b in 
+        play_game b opp_b' t
+    end
   | Play ->
     begin
       if (!turn_count mod 2 = 0) then
