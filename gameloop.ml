@@ -257,7 +257,7 @@ let rec play_game b opp_b t =
     end
   | Menu -> 
     begin 
-      ignore(handle_input_menu !b_win b);
+      ignore(handle_input_menu !scr b);
       play_game b opp_b t
     end
 
