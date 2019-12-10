@@ -95,8 +95,11 @@ let handle_miss b win dt =
   incr_cur b;
   ignore (wattroff win (Curses.WA.color_pair 1))
 
-let handle_unhit b win dt = 
-  ignore(Curses.mvwaddch win !cur_y (!cur_x*2) unhit_ch);
+let handle_unhit b win phase dt = 
+  if (phase = 1) then 
+    ignore(Curses.mvwaddch win !cur_y (!cur_x*2) empty_ch)
+  else 
+    ignore(Curses.mvwaddch win !cur_y (!cur_x*2) unhit_ch);
   incr_cur b;
   ignore(wattroff win Curses.WA.standout)
 
@@ -118,7 +121,7 @@ let cur_blink_helper b win dt =
     ignore(wattron win Curses.WA.protect)
     end
 
-let render_board b win dt =
+let render_board b win phase dt =
   cur_x := 1;
   cur_y := 1;
   ignore (start_color ());
@@ -131,7 +134,7 @@ let render_board b win dt =
         match b.(i).(j) with 
         | Hit -> handle_hit b win dt
         | Miss -> handle_miss b win dt
-        | Unhit -> handle_unhit b win dt
+        | Unhit -> handle_unhit b win phase dt
         | _ -> handle_misc b win dt
       end
     done
@@ -149,7 +152,7 @@ let handle_miss_ai b win dt =
   incr_cur b;
   ignore(wattroff win Curses.WA.standout)
 
-let handle_unhit_ai b win dt = 
+let handle_unhit_ai b win phase dt = 
   ignore(Curses.mvwaddch win !cur_y (!cur_x*2) unhit_ch);
   incr_cur b;
   ignore(wattroff win Curses.WA.standout)
@@ -159,7 +162,7 @@ let handle_misc_ai b win dt =
   incr_cur b;
   ignore(wattroff win Curses.WA.standout)
 
-let render_ai_board b win dt = 
+let render_ai_board b win phase dt = 
   cur_x := 1;
   cur_y := 1;
   for i = 0 to Array.length b - 1 do 
@@ -168,7 +171,7 @@ let render_ai_board b win dt =
     match b.(i).(j) with 
         | Hit -> handle_hit_ai b win dt
         | Miss -> handle_miss_ai b win dt
-        | Unhit -> handle_unhit_ai b win dt
+        | Unhit -> handle_unhit_ai b win phase dt
         | _ -> handle_misc_ai b win dt
     end
     done
@@ -201,13 +204,12 @@ let render b opp_b phase dt =
   Curses.box !err_win 0 0;
   if (phase = 0) then 
     begin
-    render_board b !b_win dt;
-    render_ai_board opp_b !ai_win dt
+    render_board b !b_win phase dt
     end
   else 
     begin
-    render_board opp_b !ai_win dt;
-    render_ai_board b !b_win dt
+    render_board opp_b !ai_win phase dt;
+    render_ai_board b !b_win phase dt
     end;
   render_names phase;
   render_score 0;
