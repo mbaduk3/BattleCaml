@@ -150,7 +150,6 @@ let render_board b win phase dt =
             cur_blink_helper b win dt
           end;
         match b.(i).(j) with 
-        match b.(i).(j) with 
         | Hit -> handle_hit b win dt
         | Miss -> handle_miss b win dt
         | Unhit -> handle_unhit b win phase dt
