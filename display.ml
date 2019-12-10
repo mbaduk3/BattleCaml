@@ -20,9 +20,11 @@ let crosshair_y = ref 1
 let crosshair_mat = ref (Array.make_matrix 2 1 1)
 
 let hit_ch = int_of_char 'X'
+let collected_ch = int_of_char '+'
 let miss_ch = int_of_char '0'
 let unhit_ch = int_of_char '~'
 let empty_ch = int_of_char '.'
+let uncollected_ch = int_of_char 'o'
 
 let blue = Curses.Color.blue
 let red = Curses.Color.red
@@ -60,7 +62,7 @@ let check_cross () =
   then 
     false
   else if (!cur_y < !crosshair_y || 
-      !cur_y > (!crosshair_y + (Array.length !crosshair_mat.(0)) - 1))
+           !cur_y > (!crosshair_y + (Array.length !crosshair_mat.(0)) - 1))
   then 
     false
   else
@@ -80,32 +82,40 @@ let render_board b win dt =
       begin
         if (check_cross ()) then
           begin
-          if (1000. *. !cur_timer < 35.) then 
-            begin
-            ignore(wattroff win Curses.WA.protect);
-            ignore(wattron win Curses.WA.standout)
-            end;
-          if (1000. *. !cur_timer > 50.) then 
-            begin
-            ignore(wattr_off win Curses.WA.standout);
-            ignore(cur_timer := 0.);
-            ignore(wattron win Curses.WA.protect)
-            end
+            if (1000. *. !cur_timer < 35.) then 
+              begin
+                ignore(wattroff win Curses.WA.protect);
+                ignore(wattron win Curses.WA.standout)
+              end;
+            if (1000. *. !cur_timer > 50.) then 
+              begin
+                ignore(wattr_off win Curses.WA.standout);
+                ignore(cur_timer := 0.);
+                ignore(wattron win Curses.WA.protect)
+              end
           end;
         match b.(i).(j) with 
         | Hit -> 
           ignore (color_pair1 win);
           ignore (wattroff win Curses.WA.standout);
           if (check_cross ()) then
-          ignore (wattron win (Curses.WA.color_pair 1));
+            ignore (wattron win (Curses.WA.color_pair 1));
           ignore(Curses.mvwaddch win !cur_y (!cur_x*2) hit_ch);
+          incr_cur b;
+          ignore (wattroff win (Curses.WA.color_pair 1))
+        | Collected ->
+          ignore (color_pair1 win);
+          ignore (wattroff win Curses.WA.standout);
+          if (check_cross ()) then
+            ignore (wattron win (Curses.WA.color_pair 1));
+          ignore (Curses.mvwaddch win !cur_y (!cur_x*2) collected_ch);
           incr_cur b;
           ignore (wattroff win (Curses.WA.color_pair 1))
         | Miss -> 
           ignore (color_pair1 win);
           ignore (wattroff win Curses.WA.standout);
           if (check_cross ()) then
-          ignore (wattron win (Curses.WA.color_pair 1));
+            ignore (wattron win (Curses.WA.color_pair 1));
           ignore(Curses.mvwaddch win !cur_y (!cur_x*2) miss_ch);
           incr_cur b;
           ignore (wattroff win (Curses.WA.color_pair 1))
@@ -113,6 +123,10 @@ let render_board b win dt =
           ignore(Curses.mvwaddch win !cur_y (!cur_x*2) unhit_ch);
           incr_cur b;
           ignore(wattroff win Curses.WA.standout)
+        | Uncollected ->
+          ignore (Curses.mvwaddch win !cur_y (!cur_x * 2) uncollected_ch);
+          incr_cur b;
+          ignore (wattroff win Curses.WA.standout)
         | _ -> 
           ignore(Curses.mvwaddch win !cur_y (!cur_x*2) empty_ch);
           incr_cur b;
@@ -128,10 +142,14 @@ let render_ai_board b win dt =
   cur_y := 1;
   for i = 0 to Array.length b - 1 do 
     for j = 0 to (Array.length b.(0) - 1) do 
-    begin 
-    match b.(i).(j) with 
+      begin 
+        match b.(i).(j) with 
         | Hit -> 
           ignore(Curses.mvwaddch win !cur_y (!cur_x*2) hit_ch); 
+          incr_cur b;
+          ignore(wattroff win Curses.WA.standout)
+        | Collected ->
+          ignore(Curses.mvwaddch win !cur_y (!cur_x*2) collected_ch); 
           incr_cur b;
           ignore(wattroff win Curses.WA.standout)
         | Miss -> 
@@ -142,14 +160,18 @@ let render_ai_board b win dt =
           ignore(Curses.mvwaddch win !cur_y (!cur_x*2) unhit_ch);
           incr_cur b;
           ignore(wattroff win Curses.WA.standout)
+        | Uncollected ->
+          ignore(Curses.mvwaddch win !cur_y (!cur_x*2) uncollected_ch);
+          incr_cur b;
+          ignore(wattroff win Curses.WA.standout)
         | _ -> 
           ignore(Curses.mvwaddch win !cur_y (!cur_x*2) empty_ch);
           incr_cur b;
           ignore(wattroff win Curses.WA.standout)
-    end
+      end
     done
   done;
-(* Use to render cur_time: *)
+  (* Use to render cur_time: *)
   ignore(mvwaddstr win 9 1 (string_of_float !cur_timer))
 
 let render b opp_b phase dt = 

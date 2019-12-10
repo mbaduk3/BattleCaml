@@ -40,7 +40,7 @@ let handle_fire win b =
    let ship_len = Array.length (List.nth ships ship_i) in 
    for i = 0 to (ship_len - 1) do 
     matrix.(y - 1).(x + i - 1) <- (List.nth ships ship_i).(i)
-  done *)
+   done *)
 
 (* Invert the orientation of the ship at index [ship] in the ships matrix *)
 let handle_rotate ships ship =
@@ -133,10 +133,6 @@ let cross_mat_of_ship ship orient =
   else 
     Array.make_matrix 1 len 1
 
-let orient_of_rot = function
-  | false -> Horizontal 
-  | true -> Vertical
-
 (* Updates the cursor matrix to reflect the next ship that is to be placed *)
 let update_cur_ship () = 
   if (!ship_i = 5) then 
@@ -147,13 +143,13 @@ let update_cur_ship () =
 
 let change_phase p =
   match p with 
-    | Placement -> 
-        let s,orient = Array.get ships (!ship_i) in 
-        crosshair_mat := cross_mat_of_ship s orient;
-        placement_init ()
-    | Play -> 
-        play_init ()
-        
+  | Placement -> 
+    let s,orient = Array.get ships (!ship_i) in 
+    crosshair_mat := cross_mat_of_ship s orient;
+    placement_init ()
+  | Play -> 
+    play_init ()
+
 let handle_placement win b rot =
   try
     if (!ship_i < 5) then 
@@ -163,8 +159,8 @@ let handle_placement win b rot =
         if rot then ()
         else 
           (* update_cur_ship rot; *)
-          if not rot then incr ship_i;
-          if (!ship_i = 5) then change_phase Play else ()
+        if not rot then incr ship_i;
+        if (!ship_i = 5) then change_phase Play else ()
       end
     else ()
   (* TODO: include useful error message: "You have placed all the ships!" *)
@@ -216,6 +212,27 @@ let ai_placement () =
   done;
   m
 
+let check_overlap matrix x y =
+  if matrix.(y - 1).(x - 1) = Empty
+  then matrix.(y - 1).(x - 1) <- Uncollected
+  else raise (Invalid_argument "powerup cannot be placed here")
+
+let powerup_placement powerups = 
+  let m = ai_placement () in
+  let rec place powerups = 
+    begin
+      match powerups with
+      | [] -> ()
+      | h :: t -> try
+          Random.self_init ();
+          check_overlap m (Random.int 10) (Random.int 10);
+          place t
+        with
+        | Invalid_argument e -> place (h :: t)
+    end
+  in place powerups; m
+
+
 let rec play_game b opp_b t = 
   let dt = Sys.time () -. t in
   let ntime = render b opp_b (int_of_phase !in_phase) dt in
@@ -231,7 +248,7 @@ let main () =
   let dt = Sys.time () -. starttime in
   print_string "Welcome!";
   change_phase Placement;
-  play_game demo_board (ai_placement ()) dt
+  play_game demo_board (powerup_placement easy_mode_powerups) dt
 
 let () = main ()
 

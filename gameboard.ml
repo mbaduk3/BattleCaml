@@ -2,7 +2,7 @@
 
 type coord = (int * int)
 
-type entry = Hit | Miss | Unhit | Empty
+type entry = Hit | Miss | Unhit | Empty | Collected | Uncollected
 
 type t = entry array array
 
@@ -13,10 +13,10 @@ type response = Contact of t | No_contact of t |
 
 type orientation = Vertical | Horizontal
 
-let u = Random.self_init ()
+type powerup = Sea_mine | Bomb | Double_bullet | Points | Repair_kit
 
 exception Malformed 
-exception Out_of_bounds 
+exception Out_of_bounds
 
 (* Note to self: 
    For Array.make_matrix x y elt, we would read it as x rows of length y whose
@@ -64,13 +64,19 @@ let opp_3 = opp_ships.(2) <- (create_ship 3, Horizontal)
 let opp_3' = opp_ships.(3) <- (create_ship 3, Horizontal)
 let opp_2 = opp_ships.(4) <- (create_ship 2, Horizontal)
 
+let hard_mode_powerups = Sea_mine :: Bomb :: Double_bullet
+                         :: Points :: Repair_kit :: []
+let easy_mode_powerups = hard_mode_powerups @ hard_mode_powerups
+
 (* The single-character representation of Entry [e]. *)
 let string_of_entry e = 
   match e with 
   | Hit -> "H"
+  | Collected -> "C"
   | Miss -> "M" 
   | Unhit -> "." 
   | Empty -> "." 
+  | Uncollected -> "."
 
 (* Returns n % m, handling negative numbers *)
 let new_mod n m = (n + m) mod m
@@ -96,8 +102,10 @@ let fire (c:coord) m =
   match get_val_of_coord m c with
   | Empty -> m.(fst c).(snd c) <- Miss; No_contact m
   | Hit ->  Already_hit m
+  | Collected -> Already_hit m
   | Miss -> Already_miss m
   | Unhit -> m.(fst c).(snd c) <- Hit; Contact m
+  | Uncollected -> m.(fst c).(snd c) <- Collected; Contact m
 
 let second_elt lst = List.nth lst 1
 let third_elt lst = List.nth lst 2
