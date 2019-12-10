@@ -41,6 +41,8 @@ let place_ship matrix ship_i x y =
     matrix.(y - 1).(x + i - 1) <- (List.nth ships ship_i).(i)
   done
 
+(* Returns a crosshair matrix from a given ship matrix. 
+   This is used for placement-phase highlighting *)
 let cross_mat_of_ship ship = 
   let len = Array.length ship in 
   Array.make_matrix len 1 1
