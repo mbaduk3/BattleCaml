@@ -10,6 +10,8 @@ let ship_i = ref 0
 let starttime = Sys.time ()
 
 let opp_board = demo_opp_board
+let bullets = (Array.make_matrix 1 1 1)::[]
+
 
 let turn_count = ref 0
 
@@ -33,15 +35,26 @@ let handle_fire win b =
     | Contact m -> incr_turn (); m
     | _ -> failwith "Unimplemented"
 
-let place_ship matrix ship x y = 
-  let ship_len = Array.length (List.nth ships ship) in 
+let place_ship matrix ship_i x y = 
+  let ship_len = Array.length (List.nth ships ship_i) in 
   for i = 0 to (ship_len - 1) do 
-    matrix.(y - 1).(x + i - 1) <- (List.nth ships ship).(i)
+    matrix.(y - 1).(x + i - 1) <- (List.nth ships ship_i).(i)
   done
+
+let cross_mat_of_ship ship = 
+  let len = Array.length ship in 
+  Array.make_matrix len 1 1
+
+let update_cur_ship () = 
+  if (!ship_i = 4) then 
+    crosshair_mat := (List.nth bullets 0)
+  else
+    crosshair_mat := cross_mat_of_ship (List.nth ships (!ship_i + 1))
 
 let change_phase p =
   match p with 
     | Placement -> 
+        crosshair_mat := cross_mat_of_ship (List.nth ships !ship_i);
         placement_init ()
     | Play -> 
         play_init ()
@@ -50,6 +63,7 @@ let rec handle_placement win b =
   try
     if (!ship_i < 5) then 
       begin
+        update_cur_ship ();
         place_ship b !ship_i (!crosshair_x) !crosshair_y; 
         incr ship_i;
         if (!ship_i = 5) then change_phase Play else ()
