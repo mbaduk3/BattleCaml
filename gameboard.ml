@@ -57,6 +57,13 @@ let caml_3 = ships.(2) <- (create_ship 3, Horizontal)
 let caml_3' = ships.(3) <- (create_ship 3, Horizontal)
 let caml_2 = ships.(4) <- (create_ship 2, Horizontal)
 
+let opp_ships = Array.make 5 (Array.make 0 Unhit, Horizontal)
+let opp_5 = opp_ships.(0) <- (create_ship 5, Horizontal)
+let opp_4 = opp_ships.(1) <- (create_ship 4, Horizontal)
+let opp_3 = opp_ships.(2) <- (create_ship 3, Horizontal)
+let opp_3' = opp_ships.(3) <- (create_ship 3, Horizontal)
+let opp_2 = opp_ships.(4) <- (create_ship 2, Horizontal)
+
 (* The single-character representation of Entry [e]. *)
 let string_of_entry e = 
   match e with 
@@ -73,18 +80,6 @@ let get_row m num = m.(num)
 
 let demo_board = 
   init_matrix ()
-
-let opp_board =
-  init_matrix ()
-
-let demo_opp_board = 
-  let m = init_matrix () in 
-  for row = 0 to 5 do 
-    for col = 0 to (5 - row) do 
-      m.(row).(col) <- Unhit
-    done
-  done;
-  m
 
 (* Returns a new matrix where the rows of [m] become the columns of 
    [transpose m] *)
