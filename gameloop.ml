@@ -5,8 +5,8 @@ open Ai_hard
 open Ai_easy
 open Ai_medium
 
-type phase = Placement | Play
-let in_phase = ref Placement
+type phase = Placement | Play | Menu
+let in_phase = ref Menu
 
 (* Reference to the counter for the number of ships placed in placement phase *)
 let ship_i = ref 0
@@ -17,6 +17,7 @@ let starttime = Sys.time ()
 
 let bullets = (Array.make_matrix 1 1 1)::[]
 
+
 let turn_count = ref 0
 
 let incr_turn () = turn_count := !turn_count + 1
@@ -24,24 +25,25 @@ let incr_turn () = turn_count := !turn_count + 1
 let int_of_phase = function 
   | Placement -> 0
   | Play -> 1
+  | Menu -> 2
 
 (* Change later to display responsive results *)
 let handle_fire win b = 
   if (!ship_i != 5) then b 
   else
-    let (x, y) = (!crosshair_y - 1, !crosshair_x - 1) in
-    turn_count := !turn_count + 1;
-    let res = Gameboard.fire (x, y) b in
-    match res with 
-    | No_contact m ->  m
+  let (x, y) = (!crosshair_y - 1, !crosshair_x - 1) in
+  turn_count := !turn_count + 1;
+  let res = Gameboard.fire (x, y) b in
+  match res with 
+    | No_contact m -> incr_turn (); m
     | Already_hit m -> m 
     | Already_miss m -> m 
     | Contact m -> m
     | _ -> failwith "Unimplemented"
 
 (* let place_ship matrix ship_i x y = 
-   let ship_len = Array.length (List.nth ships ship_i) in 
-   for i = 0 to (ship_len - 1) do 
+  let ship_len = Array.length (List.nth ships ship_i) in 
+  for i = 0 to (ship_len - 1) do 
     matrix.(y - 1).(x + i - 1) <- (List.nth ships ship_i).(i)
   done *)
 
@@ -95,8 +97,8 @@ let place_ship matrix ships ship x y rot =
         if orientation = Horizontal then
           begin
             if ships = opp_ships
-            then 
-              begin
+            then
+              begin 
                 check_placement opp_coordinates opp_ships ship x y orientation;
                 matrix.(y - 1).(x + i - 1) <- (fst (opp_ships.(ship))).(i);
                 opp_coordinates.(ship) <- (x, y, ship_len, orientation);
@@ -107,14 +109,14 @@ let place_ship matrix ships ship x y rot =
                 matrix.(y - 1).(x + i - 1) <- (fst (ships.(ship))).(i);
                 ship_coordinates.(ship) <- (x, y, ship_len, orientation);
               end
-          end
+            end
         else
           begin
             if ships = opp_ships
-            then
-              begin
-                check_placement opp_coordinates opp_ships ship x y orientation;
-                matrix.(y + i - 1).(x - 1) <- (fst (opp_ships.(ship))).(i);
+              then
+                begin
+                  check_placement opp_coordinates opp_ships ship x y orientation;
+                  matrix.(y + i - 1).(x - 1) <- (fst (opp_ships.(ship))).(i);
                 opp_coordinates.(ship) <- (x, y, ship_len, orientation)
               end
             else
@@ -123,10 +125,10 @@ let place_ship matrix ships ship x y rot =
                 matrix.(y + i - 1).(x - 1) <- (fst (ships.(ship))).(i);
                 ship_coordinates.(ship) <- (x, y, ship_len, orientation)
               end
-          end
+            end
       done
     end
-
+    
 (* Returns a crosshair matrix from a given ship matrix. 
    This is used for placement-phase highlighting *)
 let cross_mat_of_ship ship orient = 
@@ -136,6 +138,7 @@ let cross_mat_of_ship ship orient =
   else 
     Array.make_matrix 1 len 1
 
+(* Returns the orientation equivalent of a boolean *)
 let orient_of_rot = function
   | false -> Horizontal 
   | true -> Vertical
@@ -147,8 +150,10 @@ let update_cur_ship () =
   else
     let s,orient = Array.get ships (!ship_i) in
     crosshair_mat := cross_mat_of_ship s (orient)
-
+    
+(* Changes the internal phase of the game *)
 let change_phase p =
+  update_cur_ship ();
   match p with 
     | Placement -> 
         let s,orient = Array.get ships (!ship_i) in 
@@ -158,6 +163,8 @@ let change_phase p =
     | Play -> 
         play_init ();
         in_phase := Play
+    | Menu -> 
+        in_phase := Menu
         
 let handle_placement win b rot =
   try
@@ -171,11 +178,17 @@ let handle_placement win b rot =
           if not rot then incr ship_i;
           if (!ship_i = 5) then change_phase Play else ()
       end
-    else ()
-  (* TODO: include useful error message: "You have placed all the ships!" *)
+    else update_cur_ship ()
+      (* TODO: include useful error message: "You have placed all the ships!" *)
   with 
   | Invalid_argument e -> ()
-(*TODO: print error message [e]*)
+    (*TODO: print error message [e]*)
+
+let handle_input_menu win b = 
+  match get_key win with 
+  | Quit -> ignore(exit_display ()); b 
+  | Place -> change_phase Placement; b
+  | _ -> b
 
 let handle_input win b = 
   match get_key win with
@@ -197,7 +210,7 @@ let handle_input win b =
     handle_placement win b false; b
   | Rotate -> cur_timer := 0.;
     handle_placement win b true; b
-  | Quit -> exit_display (); b
+  | Quit -> ignore(exit_display ()); b
   | _ -> b
 
 (* Blank for now *)
@@ -205,6 +218,7 @@ let ai_fire opp_b =
   turn_count := !turn_count + 1; 
   Ai_medium.ai_fire opp_b
 
+(* Generates a random board with placed ships for the ai *)
 let ai_placement () =
   let count = ref 0 in
   let m = Array.make_matrix 10 10 Empty in
@@ -223,11 +237,13 @@ let ai_placement () =
   done;
   m
 
+(* The main recursive game loop *)
 let rec play_game b opp_b t = 
   let dt = Sys.time () -. t in
-  let ntime = render b opp_b (int_of_phase !in_phase) dt in
-  if (!in_phase = Placement) then 
-  begin
+  let ntime = render b opp_b (int_of_phase !in_phase) !turn_count dt in
+  match !in_phase with 
+  | Placement -> 
+    begin
     update_cur_ship ();
     if (!turn_count mod 2 = 0) then
       let b' = handle_input !Display.b_win b in
@@ -235,16 +251,21 @@ let rec play_game b opp_b t =
     else 
       let opp_b' = ai_fire opp_b in 
       play_game b opp_b' t
-  end
-  else 
-  begin
-    if (!turn_count mod 2 = 0) then
-      let opp_b' = handle_input !Display.b_win opp_b in
-      play_game b opp_b' ntime
-    else 
-      let b' = ai_fire b in 
-      play_game b' opp_b t
-  end
+      end
+  | Play ->
+    begin
+      if (!turn_count mod 2 = 0) then
+        let opp_b' = handle_input !Display.b_win opp_b in
+        play_game b opp_b' ntime
+      else 
+        let b' = ai_fire b in 
+        play_game b' opp_b t
+    end
+  | Menu -> 
+    begin 
+      ignore(handle_input_menu !scr b);
+      play_game b opp_b t
+    end
 
 let main () = 
   let dt = Sys.time () -. starttime in
