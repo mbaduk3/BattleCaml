@@ -33,23 +33,25 @@ let check_placement ship x y orientation =
       then
         begin
           if y = y' && (x + ship_len > x' && x + ship_len < x' + len'
-                        || x' + len' > x && x' + len' < x + ship_len)
+                        || x' + len' > x && x' < x)
           then raise (Invalid_argument "ship cannot be placed here")
         end
       else if orientation = Horizontal && ori' = Vertical then
         begin
-          if (y >= y' && y <= y' + len') && (x < x' && x + ship_len > x')
+          if (y >= y' && y <= y' + len')
+          && (x < x' && x + ship_len > x' || x = x')
           then raise (Invalid_argument "ship cannot be placed here")
         end
       else if orientation = Vertical && ori' = Horizontal then
         begin
-          if (x >= x' && x <= x' + len') && (y < y' && y + ship_len > y')
+          if (x >= x' && x <= x' + len')
+          && (y < y' && y + ship_len > y' || y = y')
           then raise (Invalid_argument "ship cannot be placed here")
         end
       else if orientation = Vertical && ori' = Vertical then
         begin
           if x = x' && (y + ship_len > y' && y + ship_len < y' + len'
-                        || y' + len' > y && y' + len' < y + ship_len)
+                        || y' + len' > y && y' < y)
           then raise (Invalid_argument "ship cannot be placed here")
         end
   done
