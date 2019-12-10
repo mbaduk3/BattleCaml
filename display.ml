@@ -39,7 +39,8 @@ let placement_init () =
 let play_init () = 
   ignore(mvwin !b_win 1 5);
   ai_win := (newwin 12 (12 * 2 - 1) 1 30);
-  ignore(refresh)
+  ignore(wclear !scr);
+  ignore(wrefresh !scr)
 
 let render_board b win dt =
   cur_x := 1;
