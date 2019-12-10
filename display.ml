@@ -7,13 +7,11 @@ let () =
   ignore(Curses.noecho ());
   ignore(Curses.curs_set 0); 
   ignore(Curses.nodelay !scr true)
-let b_win = ref (newwin 12 (12 * 2 - 1) 1 5)
+let b_win = ref null_window
 let ai_win = ref null_window
-let score_win = ref (newwin 3 15 3 54)
-let meta_win = ref (newwin 9 15 6 54)
-let err_win = ref (newwin 3 43 17 15)
-let () = 
-  ignore(Curses.nodelay !b_win true)
+let score_win = ref null_window
+let meta_win = ref null_window
+let err_win = ref null_window
 let cur_x = ref 1
 let cur_y = ref 1
 (* Crosshair x and y refer to the top-left coord of the crosshair matrix *)
@@ -31,7 +29,6 @@ let blue = Curses.Color.blue
 let red = Curses.Color.red
 let green = Curses.Color.green
 let bkgd_color win = Curses.getbkgd win
-
 let color_pair1 win = init_pair 1 (bkgd_color win) red
 
 let cur_timer = ref 0. 
@@ -46,18 +43,35 @@ let incr_cur b =
   else if (!cur_y > Array.length b) then 
     cur_y := 1
 
+(* Initalize the placement phase windows *)
 let placement_init () = 
   let y,x = getmaxyx !scr in
+  b_win := (newwin 12 (12 * 2 - 1) 1 5);
+  ignore(Curses.nodelay !b_win true);
+  score_win := (newwin 3 15 3 54);
+  meta_win := (newwin 9 15 6 54);
+  err_win := (newwin 3 40 15 29);
   ignore(mvwin !b_win 3 29);
   ignore(refresh)
 
+(* Initalize the play phase windows *)
 let play_init () = 
   ignore(mvwin !b_win 3 45);
   ai_win := (newwin 12 (12 * 2 - 1) 3 20);
   ignore(mvwin !score_win 3 70);
   ignore(mvwin !meta_win 6 70);
+  ignore(mvwin !err_win 15 20);
+  ignore(wresize !err_win 3 65);
+  ignore(wclear !err_win);
+  ignore(wrefresh !err_win);
+  ignore(wclear !meta_win);
+  ignore(wrefresh !meta_win);
   ignore(wclear !scr);
   ignore(wrefresh !scr)
+
+(* Initalize the menu phase windows *)
+let menu_init () = ()
+
 
 (* True if the drawing cursor coordinates are equal to a crosshair coord.
    False otherwise *)
@@ -183,7 +197,7 @@ let render_names_placement () =
   mvwaddstr !scr 2 30 "My board:"
 
 let render_names_play () = 
-  mvwaddstr !scr 2 46 "My board:";
+  ignore(mvwaddstr !scr 2 46 "My board:");
   mvwaddstr !scr 2 19 "AI board:"
 
 let render_names phase = 
@@ -195,24 +209,50 @@ let render_names phase =
 let render_score score = 
   ignore(mvwaddstr !score_win 1 1 ("Score: " ^ (string_of_int score)))
 
-let render b opp_b phase dt = 
-  (* Curses.wborder !scr 0 0 0 0 0 0 0 0; *)
-  Curses.wborder !b_win 0 0 0 0 0 0 0 0;
-  Curses.box !ai_win 0 0;
-  Curses.box !score_win 0 0;
-  Curses.box !meta_win 0 0;
-  Curses.box !err_win 0 0;
-  if (phase = 0) then 
-    begin
-    render_board b !b_win phase dt
-    end
-  else 
-    begin
-    render_board opp_b !ai_win phase dt;
-    render_ai_board b !b_win phase dt
-    end;
+let render_err err = 
+  ignore(mvwaddstr !err_win 1 1 err)
+
+let render_turn turn = 
+  ignore(mvwaddstr !meta_win 1 1 ("Turn #: " ^ string_of_int turn))
+
+let str_of_phase = function 
+  | 0 -> "Placement"
+  | 1 -> "Play" 
+  | 2 -> "Menu"
+  | _ -> raise Out_of_bounds
+
+let render_phase phase = 
+  ignore(mvwaddstr !meta_win 2 1 phase)
+
+let menu_helper win phase dt = 
+  Curses.box win 0 0
+  
+
+let render b opp_b phase turn dt =
+  begin
+  match phase with 
+    | 0 -> 
+      Curses.wborder !b_win 0 0 0 0 0 0 0 0;
+      Curses.box !score_win 0 0;
+      Curses.box !meta_win 0 0;
+      Curses.box !err_win 0 0;
+      render_board b !b_win phase dt
+    | 1 -> 
+      Curses.wborder !b_win 0 0 0 0 0 0 0 0;
+      Curses.box !ai_win 0 0;
+      Curses.box !score_win 0 0;
+      Curses.box !meta_win 0 0;
+      Curses.box !err_win 0 0;
+      render_board opp_b !ai_win phase dt;
+      render_ai_board b !b_win phase dt
+    | 2 -> menu_helper !scr phase dt
+    | _ -> ()
+  end;
   render_names phase;
   render_score 0;
+  render_turn turn;
+  render_err "Welcome to battleCaml!";
+  render_phase (str_of_phase phase);
   Curses.wrefresh !b_win;
   Curses.wrefresh !score_win;
   Curses.wrefresh !ai_win;
