@@ -22,7 +22,7 @@ exception Out_of_bounds
    Array.(i).(j) gives the val at row i, column j *)
 
 (* A 10x10 board of Empty values *)
-let init_matrix:t = Array.make_matrix 10 10 Empty
+let init_matrix () = Array.make_matrix 10 10 Empty
 
 (* Returns the 0-based index of [elem] in the list [lst] *)
 let rec index lst elem acc = 
@@ -70,7 +70,16 @@ let new_mod n m = (n + m) mod m
 let get_row m num = m.(num)
 
 let demo_board = 
-  init_matrix
+  init_matrix ()
+
+let demo_opp_board = 
+  let m = init_matrix () in 
+  for row = 0 to 5 do 
+    for col = 0 to (5 - row) do 
+      m.(row).(col) <- Unhit
+    done
+  done;
+  m
 
 (* Returns a new matrix where the rows of [m] become the columns of 
    [transpose m] *)
