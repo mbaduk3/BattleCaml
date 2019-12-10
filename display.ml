@@ -2,6 +2,9 @@ open Curses
 open Gameboard
 
 let scr = ref (initscr ())
+(* Max x, y are the dimensions of the terminal window *)
+let max_x = ref 0
+let max_y = ref 0
 let () = 
   ignore(Curses.cbreak ());
   ignore(Curses.noecho ());
@@ -12,6 +15,7 @@ let ai_win = ref null_window
 let score_win = ref null_window
 let meta_win = ref null_window
 let err_win = ref null_window
+let sel_win = ref null_window
 let cur_x = ref 1
 let cur_y = ref 1
 (* Crosshair x and y refer to the top-left coord of the crosshair matrix *)
@@ -37,6 +41,24 @@ let cur_timer = ref 0.
 let turn_count = ref 0
 let scr_width = ref 0
 
+let battlecaml_str = "
+  ____        _   _   _       ____                _ 
+ | __ )  __ _| |_| |_| | ___ / ___|__ _ _ __ ___ | |
+ |  _ \ / _` | __| __| |/ _ \ |   / _` | '_ ` _ \| |
+ | |_) | (_| | |_| |_| |  __/ |__| (_| | | | | | | |
+ |____/ \__,_|\__|\__|_|\___|\____\__,_|_| |_| |_|_|"
+
+let p_to_play_str = "
+                            _ _     _ _   _                _             
+                           ( | )   ( | ) | |              | |            
+  _ __  _ __ ___  ___ ___   V V_ __ V V  | |_ ___    _ __ | | __ _ _   _ 
+ | '_ \| '__/ _ \/ __/ __|    | '_ \     | __/ _ \  | '_ \| |/ _` | | | |
+ | |_) | | |  __/\__ \__ \    | |_) |    | || (_) | | |_) | | (_| | |_| |
+ | .__/|_|  \___||___/___/    | .__/      \__\___/  | .__/|_|\__,_|\__, |
+ | |                          | |                   | |             __/ |
+ |_|                          |_|                   |_|            |___/ 
+"
+
 let incr_cur b = 
   cur_x := !cur_x + 1;
   if (!cur_x > Array.length b.(0)) then 
@@ -47,6 +69,7 @@ let incr_cur b =
 
 (* Initalize the placement phase windows *)
 let placement_init () = 
+  ignore(wclear !scr);
   let y,x = getmaxyx !scr in
   b_win := (newwin 12 (12 * 2 - 1) 1 5);
   ignore(Curses.nodelay !b_win true);
@@ -54,7 +77,7 @@ let placement_init () =
   meta_win := (newwin 9 15 6 54);
   err_win := (newwin 3 40 15 29);
   ignore(mvwin !b_win 3 29);
-  ignore(refresh)
+  ignore(wrefresh !scr)
 
 (* Initalize the play phase windows *)
 let play_init () = 
@@ -72,8 +95,8 @@ let play_init () =
   ignore(wrefresh !scr)
 
 (* Initalize the menu phase windows *)
-let menu_init () = ()
-
+let menu_init () = 
+  sel_win := (newwin 20 80 3 3)
 
 (* True if the drawing cursor coordinates are equal to a crosshair coord.
    False otherwise *)
@@ -229,7 +252,8 @@ let render_err err =
   ignore(mvwaddstr !err_win 1 1 err)
 
 let render_turn turn = 
-  ignore(mvwaddstr !meta_win 1 1 ("Turn #: " ^ string_of_int turn))
+  let turn' = turn / 2 in 
+  ignore(mvwaddstr !meta_win 1 1 ("Turn #: " ^ string_of_int turn'))
 
 let str_of_phase = function 
   | 0 -> "Placement"
@@ -240,39 +264,62 @@ let str_of_phase = function
 let render_phase phase = 
   ignore(mvwaddstr !meta_win 2 1 phase)
 
+let menu_refresh () = 
+  let h,w = getmaxyx !sel_win in 
+  ignore(mvwin !sel_win (!max_y / 2 - (h / 2)) (!max_x / 2 - (w / 2)));
+  ignore(mvwhline !scr 3 0 0 1000);
+  ignore(mvwhline !scr (!max_y - 3) 0 0 1000);
+  ignore(mvwaddstr !sel_win 1 1 battlecaml_str);
+  ignore(mvwaddstr !sel_win 8 1 p_to_play_str);
+  ignore(box !sel_win 0 0)
+
 let menu_helper win phase dt = 
-  Curses.box win 0 0
+  menu_refresh ()
   
+
+(* Refreshes max_x, max_y to the current terminal size *)
+let update_maxs () =
+  let y,x = getmaxyx !scr in 
+  max_x := x;
+  max_y := y
+
 let render b opp_b phase turn dt =
   begin
+  update_maxs ();
   match phase with 
     | 0 -> 
       Curses.wborder !b_win 0 0 0 0 0 0 0 0;
       Curses.box !score_win 0 0;
       Curses.box !meta_win 0 0;
       Curses.box !err_win 0 0;
-      render_board b !b_win phase dt
+      render_board b !b_win phase dt;
+      render_names phase;
+      render_score 0;
+      render_turn turn;
+      render_err "Welcome to battleCaml!";
+      render_phase (str_of_phase phase);
     | 1 -> 
       Curses.wborder !b_win 0 0 0 0 0 0 0 0;
       Curses.box !ai_win 0 0;
       Curses.box !score_win 0 0;
       Curses.box !meta_win 0 0;
       Curses.box !err_win 0 0;
+      render_names phase;
+      render_score 0;
+      render_turn turn;
+      render_err "Welcome to battleCaml!";
+      render_phase (str_of_phase phase);
       render_board opp_b !ai_win phase dt;
       render_ai_board b !b_win phase dt
     | 2 -> menu_helper !scr phase dt
     | _ -> ()
   end;
-  render_names phase;
-  render_score 0;
-  render_turn turn;
-  render_err "Welcome to battleCaml!";
-  render_phase (str_of_phase phase);
   Curses.wrefresh !b_win;
   Curses.wrefresh !score_win;
   Curses.wrefresh !ai_win;
   Curses.wrefresh !err_win;
   Curses.wrefresh !meta_win;
+  Curses.wrefresh !sel_win;
   Curses.wrefresh !scr;
   Sys.time ()
 
