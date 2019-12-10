@@ -1,6 +1,7 @@
 open Gameboard
 open Display
 open Command
+open Ai_hard
 
 type phase = Placement | Play
 let in_phase = ref Placement
@@ -198,7 +199,9 @@ let handle_input win b =
   | _ -> b
 
 (* Blank for now *)
-let ai_fire opp_b = turn_count := !turn_count + 1; opp_b
+let ai_fire opp_b = 
+  turn_count := !turn_count + 1; 
+  Ai_hard.ai_fire opp_b
 
 let ai_placement () =
   let count = ref 0 in
