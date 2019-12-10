@@ -249,7 +249,7 @@ let rec play_game b opp_b t =
 let main () = 
   let dt = Sys.time () -. starttime in
   print_string "Welcome!";
-  change_phase Placement;
+  change_phase Menu;
   play_game demo_board (ai_placement ()) dt
 
 let () = main ()
