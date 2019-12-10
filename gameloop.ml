@@ -12,6 +12,8 @@ let ship_coordinates = Array.make 5 (0, 0, 0, Horizontal)
 let starttime = Sys.time ()
 
 let opp_board = demo_opp_board
+let bullets = (Array.make_matrix 1 1 1)::[]
+
 
 let turn_count = ref 0
 
@@ -35,6 +37,11 @@ let handle_fire win b =
     | Contact m -> incr_turn (); m
     | _ -> failwith "Unimplemented"
 
+(* let place_ship matrix ship_i x y = 
+  let ship_len = Array.length (List.nth ships ship_i) in 
+  for i = 0 to (ship_len - 1) do 
+    matrix.(y - 1).(x + i - 1) <- (List.nth ships ship_i).(i)
+  done *)
 let handle_rotate ship =
   if snd ships.(ship) = Horizontal
   then ships.(ship) <- (fst (ships.(ship)), Vertical)
@@ -95,10 +102,23 @@ let place_ship matrix ship x y rot =
           end
       done
     end
+    
+(* Returns a crosshair matrix from a given ship matrix. 
+   This is used for placement-phase highlighting *)
+let cross_mat_of_ship ship = 
+  let len = Array.length ship in 
+  Array.make_matrix len 1 1
+
+let update_cur_ship () = 
+  if (!ship_i = 4) then 
+    crosshair_mat := (List.nth bullets 0)
+  else
+    crosshair_mat := cross_mat_of_ship (List.nth ships (!ship_i + 1))
 
 let change_phase p =
   match p with 
     | Placement -> 
+        crosshair_mat := cross_mat_of_ship (List.nth ships !ship_i);
         placement_init ()
     | Play -> 
         play_init ()
@@ -107,6 +127,7 @@ let handle_placement win b rot =
   try
     if (!ship_i < 5) then 
       begin
+        update_cur_ship ();
         place_ship b !ship_i (!crosshair_x) !crosshair_y rot;
         if rot then ()
         else 

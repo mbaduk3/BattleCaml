@@ -13,8 +13,11 @@ let () =
   ignore(Curses.nodelay !b_win true)
 let cur_x = ref 1
 let cur_y = ref 1
-let crosshair_x = ref 1
+(* Crosshair x and y refer to the top-left coord of the crosshair matrix *)
+let crosshair_x = ref 1 
 let crosshair_y = ref 1
+(* The crosshair matrix. It can be any pattern, not just 1x1 *)
+let crosshair_mat = ref (Array.make_matrix 2 1 1)
 
 let hit_ch = int_of_char 'X'
 let miss_ch = int_of_char '0'
@@ -49,6 +52,24 @@ let play_init () =
   ignore(wclear !scr);
   ignore(wrefresh !scr)
 
+(* True if the drawing cursor coordinates are equal to a crosshair coord.
+   False otherwise *)
+let check_cross () = 
+  if (!cur_x < !crosshair_x || 
+      !cur_x > (!crosshair_x + (Array.length !crosshair_mat) - 1))
+  then 
+    false
+  else if (!cur_y < !crosshair_y || 
+      !cur_y > (!crosshair_y + (Array.length !crosshair_mat.(0)) - 1))
+  then 
+    false
+  else
+    let rel_x = !cur_x - !crosshair_x in 
+    let rel_y = !cur_y - !crosshair_y in 
+    if (!crosshair_mat.(rel_x).(rel_y) = 0) 
+    then false
+    else true
+
 let render_board b win dt =
   cur_x := 1;
   cur_y := 1;
@@ -57,7 +78,7 @@ let render_board b win dt =
   for i = 0 to Array.length b - 1 do 
     for j = 0 to (Array.length b.(0) - 1) do 
       begin
-        if (!cur_x = !crosshair_x && !cur_y = !crosshair_y) then
+        if (check_cross ()) then
           begin
           if (1000. *. !cur_timer < 35.) then 
             begin
@@ -75,16 +96,16 @@ let render_board b win dt =
         | Hit -> 
           ignore (color_pair1 win);
           ignore (wattroff win Curses.WA.standout);
-          if (!cur_x = !crosshair_x && !cur_y = !crosshair_y) then
-            ignore (wattron win (Curses.WA.color_pair 1));
+          if (check_cross ()) then
+          ignore (wattron win (Curses.WA.color_pair 1));
           ignore(Curses.mvwaddch win !cur_y (!cur_x*2) hit_ch);
           incr_cur b;
           ignore (wattroff win (Curses.WA.color_pair 1))
         | Miss -> 
           ignore (color_pair1 win);
           ignore (wattroff win Curses.WA.standout);
-          if (!cur_x = !crosshair_x && !cur_y = !crosshair_y) then
-            ignore (wattron win (Curses.WA.color_pair 1));
+          if (check_cross ()) then
+          ignore (wattron win (Curses.WA.color_pair 1));
           ignore(Curses.mvwaddch win !cur_y (!cur_x*2) miss_ch);
           incr_cur b;
           ignore (wattroff win (Curses.WA.color_pair 1))
