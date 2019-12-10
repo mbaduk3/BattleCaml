@@ -9,11 +9,10 @@ let in_phase = ref Placement
 let ship_i = ref 0
 
 let ship_coordinates = Array.make 5 (0, 0, 0, Horizontal)
+let opp_coordinates = Array.make 5 (0, 0, 0, Horizontal)
 let starttime = Sys.time ()
 
-let opp_board1 = demo_opp_board
 let bullets = (Array.make_matrix 1 1 1)::[]
-
 
 let turn_count = ref 0
 
@@ -42,15 +41,15 @@ let handle_fire win b =
    for i = 0 to (ship_len - 1) do 
     matrix.(y - 1).(x + i - 1) <- (List.nth ships ship_i).(i)
    done *)
-let handle_rotate ship =
+let handle_rotate ships ship =
   if snd ships.(ship) = Horizontal
   then ships.(ship) <- (fst (ships.(ship)), Vertical)
   else ships.(ship) <- (fst (ships.(ship)), Horizontal)
 
-let check_placement ship x y orientation =
+let check_placement coords ships ship x y orientation =
   let ship_len = Array.length (fst (ships.(ship))) in
   for i = 0 to ship - 1 do
-    match ship_coordinates.(i) with
+    match coords.(i) with
     | (x', y', len', ori') -> if orientation = Horizontal && ori' = Horizontal
       then
         begin
@@ -78,8 +77,8 @@ let check_placement ship x y orientation =
         end
   done
 
-let place_ship matrix ship x y rot = 
-  if rot then handle_rotate ship
+let place_ship matrix ships ship x y rot = 
+  if rot then handle_rotate ships ship
   else
     let ship_len = Array.length (fst (ships.(ship))) in 
     let orientation = snd (ships.(ship)) in
@@ -90,15 +89,35 @@ let place_ship matrix ship x y rot =
       for i = 0 to (ship_len - 1) do
         if orientation = Horizontal then
           begin
-            check_placement ship x y orientation;
-            matrix.(y - 1).(x + i - 1) <- (fst (ships.(ship))).(i);
-            ship_coordinates.(ship) <- (x, y, ship_len, orientation)
+            if ships = opp_ships
+            then 
+              begin
+                check_placement opp_coordinates opp_ships ship x y orientation;
+                matrix.(y - 1).(x + i - 1) <- (fst (opp_ships.(ship))).(i);
+                opp_coordinates.(ship) <- (x, y, ship_len, orientation);
+              end
+            else
+              begin
+                check_placement ship_coordinates ships ship x y orientation;
+                matrix.(y - 1).(x + i - 1) <- (fst (ships.(ship))).(i);
+                ship_coordinates.(ship) <- (x, y, ship_len, orientation);
+              end
           end
         else
           begin
-            check_placement ship x y orientation;
-            matrix.(y + i - 1).(x - 1) <- (fst (ships.(ship))).(i);
-            ship_coordinates.(ship) <- (x, y, ship_len, orientation)
+            if ships = opp_ships
+            then
+              begin
+                check_placement opp_coordinates opp_ships ship x y orientation;
+                matrix.(y + i - 1).(x - 1) <- (fst (opp_ships.(ship))).(i);
+                opp_coordinates.(ship) <- (x, y, ship_len, orientation)
+              end
+            else
+              begin
+                check_placement ship_coordinates ships ship x y orientation;
+                matrix.(y + i - 1).(x - 1) <- (fst (ships.(ship))).(i);
+                ship_coordinates.(ship) <- (x, y, ship_len, orientation)
+              end
           end
       done
     end
@@ -128,7 +147,7 @@ let handle_placement win b rot =
     if (!ship_i < 5) then 
       begin
         update_cur_ship ();
-        place_ship b !ship_i (!crosshair_x) !crosshair_y rot;
+        place_ship b ships !ship_i (!crosshair_x) !crosshair_y rot;
         if rot then ()
         else 
           incr ship_i;
@@ -168,17 +187,19 @@ let ai_fire opp_b = turn_count := !turn_count + 1; opp_b
 
 let ai_placement =
   let count = ref 0 in
-  let m = init_matrix () in
+  let m = Array.make_matrix 10 10 Empty in
   while !count < 5 do
     try
-      let x = Random.int 10 in
-      let y = Random.int 10 in
-      let rot = Random.bool () in
-      place_ship m !count x y rot;
-      if rot then ()
-      else incr count;
+      Random.self_init ();
+      if Random.bool ()
+      then place_ship m opp_ships !count (Random.int 10) (Random.int 10) true
+      else
+        begin
+          place_ship m opp_ships !count (Random.int 10) (Random.int 10) false;
+          incr count
+        end
     with
-    | Invalid_argument e -> ()
+    | Invalid_argument e -> ();
   done;
   m
 
