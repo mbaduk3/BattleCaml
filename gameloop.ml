@@ -5,25 +5,41 @@ open Command
 (* Reference to the counter for the number of ships placed in placement phase *)
 let ship_i = ref 0
 let starttime = Unix.gettimeofday ()
+let ship_coordinates = Array.make 5 (0, 0, 0)
 
 (* Change later to display responsive results *)
 let handle_fire win b = 
   if (!ship_i != 5) then b 
   else
-  let (x, y) = (!crosshair_y - 1, !crosshair_x - 1) in
-  let res = Gameboard.fire (x, y) b in
-  match res with 
+    let (x, y) = (!crosshair_y - 1, !crosshair_x - 1) in
+    let res = Gameboard.fire (x, y) b in
+    match res with 
     | No_contact m -> m
     | Already_hit m -> m 
     | Already_miss m -> m 
     | Contact m -> m
     | _ -> failwith "Unimplemented"
 
+let check_placement ship x y =
+  let ship_len = Array.length (List.nth ships ship) in
+  for i = 0 to ship - 1 do
+    match ship_coordinates.(i) with
+    | (x', y', len') -> if y = y' && (x + ship_len >= x' || x' + len' >= x)
+      then raise (Invalid_argument "ship cannot be placed here")
+      else ()
+  done
+
 let place_ship matrix ship x y = 
   let ship_len = Array.length (List.nth ships ship) in 
-  for i = 0 to (ship_len - 1) do 
-    matrix.(y - 1).(x + i - 1) <- (List.nth ships ship).(i)
-  done
+  if x + ship_len > 11
+  then raise (Invalid_argument "ship is out of bounds")
+  else begin
+    for i = 0 to (ship_len - 1) do
+      check_placement ship x y;
+      matrix.(y - 1).(x + i - 1) <- (List.nth ships ship).(i);
+      ship_coordinates.(ship) <- (x, y, ship_len)
+    done
+  end
 
 let rec handle_placement win b =
   try
@@ -32,35 +48,34 @@ let rec handle_placement win b =
         place_ship b !ship_i (!crosshair_x) !crosshair_y; 
         incr ship_i
       end
-      else 
+    else 
       (* TODO: include useful error message: "You have placed all the ships!" *)
       ()
   with 
-    | Invalid_argument e -> 
-        (*TODO: error message: "ship is out of bounds"*)
-        incr ship_i;
-        ()
+  | Invalid_argument e -> 
+    (*TODO: print error message [e]*)
+    ()
 
 let handle_input win b = 
   match get_key win with
-    | Down -> if !crosshair_y < 10 then incr crosshair_y 
-              else crosshair_y := 1;
-              cur_timer := 0.; b
-    | Up -> if !crosshair_y > 1 then decr crosshair_y
-            else crosshair_y := 10;
-            cur_timer := 0.; b
-    | Left -> if !crosshair_x > 1 then decr crosshair_x
-              else crosshair_x := 10;
-              cur_timer := 0.; b
-    | Right -> if !crosshair_x < 10 then incr crosshair_x
-                else crosshair_x := 1;
-                cur_timer := 0.; b
-    | Fire -> cur_timer := 0.;
-              handle_fire win b
-    | Place -> cur_timer := 0.;
-               handle_placement win b; b
-    | Quit -> exit_display (); b
-    | _ -> b
+  | Down -> if !crosshair_y < 10 then incr crosshair_y 
+    else crosshair_y := 1;
+    cur_timer := 0.; b
+  | Up -> if !crosshair_y > 1 then decr crosshair_y
+    else crosshair_y := 10;
+    cur_timer := 0.; b
+  | Left -> if !crosshair_x > 1 then decr crosshair_x
+    else crosshair_x := 10;
+    cur_timer := 0.; b
+  | Right -> if !crosshair_x < 10 then incr crosshair_x
+    else crosshair_x := 1;
+    cur_timer := 0.; b
+  | Fire -> cur_timer := 0.;
+    handle_fire win b
+  | Place -> cur_timer := 0.;
+    handle_placement win b; b
+  | Quit -> exit_display (); b
+  | _ -> b
 
 let rec play_game b dt = 
   let ntime = render b dt in 

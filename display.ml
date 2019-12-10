@@ -47,24 +47,24 @@ let render_board b win dt =
       begin
         if (!cur_x = !crosshair_x && !cur_y = !crosshair_y) then
           begin
-          if (1000. *. !cur_timer < 1.8) then 
-            begin
-            ignore(wattroff win Curses.WA.protect);
-            ignore(wattron win Curses.WA.standout)
-            end;
-          if (1000. *. !cur_timer > 3.1) then 
-            begin
-            ignore(wattr_off win Curses.WA.standout);
-            ignore(cur_timer := 0.);
-            ignore(wattron win Curses.WA.protect)
-            end
+            if (1000. *. !cur_timer < 1.8) then 
+              begin
+                ignore(wattroff win Curses.WA.protect);
+                ignore(wattron win Curses.WA.standout)
+              end;
+            if (1000. *. !cur_timer > 3.1) then 
+              begin
+                ignore(wattr_off win Curses.WA.standout);
+                ignore(cur_timer := 0.);
+                ignore(wattron win Curses.WA.protect)
+              end
           end;
         match b.(i).(j) with 
         | Hit -> 
           ignore (color_pair1 win);
           ignore (wattroff win Curses.WA.standout);
           if (!cur_x = !crosshair_x && !cur_y = !crosshair_y) then
-          ignore (wattron win (Curses.WA.color_pair 1));
+            ignore (wattron win (Curses.WA.color_pair 1));
           ignore(Curses.mvwaddch win !cur_y (!cur_x*2) hit_ch);
           incr_cur b;
           ignore (wattroff win (Curses.WA.color_pair 1))
@@ -72,7 +72,7 @@ let render_board b win dt =
           ignore (color_pair1 win);
           ignore (wattroff win Curses.WA.standout);
           if (!cur_x = !crosshair_x && !cur_y = !crosshair_y) then
-          ignore (wattron win (Curses.WA.color_pair 1));
+            ignore (wattron win (Curses.WA.color_pair 1));
           ignore(Curses.mvwaddch win !cur_y (!cur_x*2) miss_ch);
           incr_cur b;
           ignore (wattroff win (Curses.WA.color_pair 1))
@@ -87,8 +87,8 @@ let render_board b win dt =
       end
     done
   done
-  (* Use to render cur_time:
-     ignore(mvwaddstr win 9 1 (string_of_float !cur_timer)) *)
+(* Use to render cur_time:
+   ignore(mvwaddstr win 9 1 (string_of_float !cur_timer)) *)
 
 let render b dt = 
   Curses.box !b_win 0 0;
