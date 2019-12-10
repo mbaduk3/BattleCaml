@@ -60,6 +60,8 @@ let play_init () =
   ignore(wresize !err_win 3 65);
   ignore(wclear !err_win);
   ignore(wrefresh !err_win);
+  ignore(wclear !meta_win);
+  ignore(wrefresh !meta_win);
   ignore(wclear !scr);
   ignore(wrefresh !scr)
 
@@ -199,7 +201,20 @@ let render_names phase =
 let render_score score = 
   ignore(mvwaddstr !score_win 1 1 ("Score: " ^ (string_of_int score)))
 
-let render b opp_b phase dt = 
+let render_err err = 
+  ignore(mvwaddstr !err_win 1 1 err)
+
+let render_turn turn = 
+  ignore(mvwaddstr !meta_win 1 1 ("Turn #: " ^ string_of_int turn))
+
+let str_of_phase = function 
+  | 0 -> "Placement"
+  | 1 -> "Play" 
+
+let render_phase phase = 
+  ignore(mvwaddstr !meta_win 2 1 phase)
+
+let render b opp_b phase turn dt = 
   (* Curses.wborder !scr 0 0 0 0 0 0 0 0; *)
   Curses.wborder !b_win 0 0 0 0 0 0 0 0;
   Curses.box !ai_win 0 0;
@@ -217,6 +232,9 @@ let render b opp_b phase dt =
     end;
   render_names phase;
   render_score 0;
+  render_turn turn;
+  render_err "Welcome to battleCaml!";
+  render_phase (str_of_phase phase);
   Curses.wrefresh !b_win;
   Curses.wrefresh !score_win;
   Curses.wrefresh !ai_win;

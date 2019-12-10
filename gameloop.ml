@@ -133,6 +133,7 @@ let cross_mat_of_ship ship orient =
   else 
     Array.make_matrix 1 len 1
 
+(* Returns the orientation equivalent of a boolean *)
 let orient_of_rot = function
   | false -> Horizontal 
   | true -> Vertical
@@ -145,7 +146,9 @@ let update_cur_ship () =
     let s,orient = Array.get ships (!ship_i) in
     crosshair_mat := cross_mat_of_ship s (orient)
 
+(* Changes the internal phase of the game *)
 let change_phase p =
+  update_cur_ship ();
   match p with 
     | Placement -> 
         let s,orient = Array.get ships (!ship_i) in 
@@ -168,7 +171,7 @@ let handle_placement win b rot =
           if not rot then incr ship_i;
           if (!ship_i = 5) then change_phase Play else ()
       end
-    else ()
+    else update_cur_ship ()
   (* TODO: include useful error message: "You have placed all the ships!" *)
   with 
   | Invalid_argument e -> ()
@@ -218,9 +221,10 @@ let ai_placement () =
   done;
   m
 
+(* The main recursive game loop *)
 let rec play_game b opp_b t = 
   let dt = Sys.time () -. t in
-  let ntime = render b opp_b (int_of_phase !in_phase) dt in
+  let ntime = render b opp_b (int_of_phase !in_phase) !turn_count dt in
   if (!in_phase = Placement) then 
   begin
     update_cur_ship ();
