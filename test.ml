@@ -11,8 +11,10 @@ let array_c = Array.make 3 "a"
 let () = array_c.(1) <- "b"; array_c.(2) <- "c"
 let array_empty = Array.make 0 "a"
 let board_a = Array.make_matrix 10 10 Empty
-let board_b = Array.copy board_a
+let board_b = Array.make_matrix 10 10 Empty
 let () = board_b.(2).(3) <- Miss
+let board_c = Array.make_matrix 10 10 Empty
+let () = board_c.(5).(5) <- Hit
 
 let reset_board_a () = 
   for i = 0 to 9 do 
@@ -77,13 +79,12 @@ let make_fire_test
   (name: string)
   (input_c: coord)
   (input_m: Gameboard.t)
-  (expected: Gameboard.response) : test = 
+  (expected: string) : test = 
   name >:: (fun _ -> 
-    reset_board_a ();
     format input_m;
     let res = fire input_c input_m in 
     format input_m;
-    assert_equal ~printer:(string_of_response) expected res)
+    assert_equal expected (string_of_response res))
 
 
 let gameboard_tests = [
@@ -101,10 +102,10 @@ let gameboard_tests = [
   make_new_mod_test "mod by negative" 5 (-3) (2);
   make_string_of_tup_test "tuple test" (5, 5) "(5, 5)";
   make_string_of_tup_test "negative tup" (-2, 3) "(-2, 3)";
-  make_get_val_of_coord "empty val" board_a (3, 3) Empty;
-  make_fire_test "empty fire" (2, 3) board_a (No_contact board_a);
-  make_get_val_of_coord "miss val" board_a (3, 3) Miss;
-  (* make_fire_test "miss fire" (2, 3) board_b (Already_miss board_b); *)
+  make_get_val_of_coord "empty val" board_a (2, 3) Empty;
+  make_fire_test "empty fire" (2, 3) board_a "no contact";
+  make_get_val_of_coord "hit val" board_c (5, 5) Hit;
+  make_fire_test "miss fire" (2, 3) board_b "already miss";
 ]
 
 
