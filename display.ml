@@ -1,5 +1,6 @@
 open Curses
 open Gameboard
+open Ascii
 
 let scr = ref (initscr ())
 (* Max x, y are the dimensions of the terminal window *)
@@ -36,28 +37,11 @@ let red = Curses.Color.red
 let green = Curses.Color.green
 let bkgd_color win = Curses.getbkgd win
 let color_pair1 win = init_pair 1 (bkgd_color win) red
+let color_pair2 win = init_pair 2 blue (bkgd_color win)
 
 let cur_timer = ref 0. 
 let turn_count = ref 0
 let scr_width = ref 0
-
-let battlecaml_str = "
-  ____        _   _   _       ____                _ 
- | __ )  __ _| |_| |_| | ___ / ___|__ _ _ __ ___ | |
- |  _ \ / _` | __| __| |/ _ \ |   / _` | '_ ` _ \| |
- | |_) | (_| | |_| |_| |  __/ |__| (_| | | | | | | |
- |____/ \__,_|\__|\__|_|\___|\____\__,_|_| |_| |_|_|"
-
-let p_to_play_str = "
-                            _ _     _ _   _                _             
-                           ( | )   ( | ) | |              | |            
-  _ __  _ __ ___  ___ ___   V V_ __ V V  | |_ ___    _ __ | | __ _ _   _ 
- | '_ \| '__/ _ \/ __/ __|    | '_ \     | __/ _ \  | '_ \| |/ _` | | | |
- | |_) | | |  __/\__ \__ \    | |_) |    | || (_) | | |_) | | (_| | |_| |
- | .__/|_|  \___||___/___/    | .__/      \__\___/  | .__/|_|\__,_|\__, |
- | |                          | |                   | |             __/ |
- |_|                          |_|                   |_|            |___/ 
-"
 
 let incr_cur b = 
   cur_x := !cur_x + 1;
@@ -96,7 +80,7 @@ let play_init () =
 
 (* Initalize the menu phase windows *)
 let menu_init () = 
-  sel_win := (newwin 20 80 3 3)
+  sel_win := (newwin 31 80 0 3)
 
 (* True if the drawing cursor coordinates are equal to a crosshair coord.
    False otherwise *)
@@ -264,26 +248,37 @@ let str_of_phase = function
 let render_phase phase = 
   ignore(mvwaddstr !meta_win 2 1 phase)
 
-let menu_refresh () = 
+let camel_menu_col win = 
+  ignore(mvwaddstr !sel_win 1 1 camel_menu_str);
+  ignore(wattron win 3);
+  ignore(mvwaddstr !sel_win 7 7 battlecaml_str);
+  ignore(wattron win (Curses.WA.color_pair blue));
+  ignore(color_pair2 win);
+  ignore(mvwaddstr !sel_win 16 5 p_to_play_2_str);
+  ignore(wattroff win (Curses.WA.color_pair blue))
+
+let camel_menu_fix win = 
+  ignore(mvwaddstr !sel_win 1 1 camel1_str)
+
+let menu_refresh win = 
+  ignore(start_color ());
+  (* ignore(mvwaddstr !scr 1 1 camel1_str); *)
   let h,w = getmaxyx !sel_win in 
   ignore(mvwin !sel_win (!max_y / 2 - (h / 2)) (!max_x / 2 - (w / 2)));
   ignore(mvwhline !scr 3 0 0 1000);
   ignore(mvwhline !scr (!max_y - 3) 0 0 1000);
-  ignore(mvwaddstr !sel_win 1 1 battlecaml_str);
-  ignore(mvwaddstr !sel_win 8 1 p_to_play_str);
-  ignore(box !sel_win 0 0)
+  camel_menu_fix win
 
 let menu_helper win phase dt = 
-  menu_refresh ()
+  menu_refresh win
   
-
 (* Refreshes max_x, max_y to the current terminal size *)
 let update_maxs () =
   let y,x = getmaxyx !scr in 
   max_x := x;
   max_y := y
 
-let render b opp_b phase turn dt =
+let render b opp_b phase turn score dt =
   begin
   update_maxs ();
   match phase with 
@@ -305,7 +300,7 @@ let render b opp_b phase turn dt =
       Curses.box !meta_win 0 0;
       Curses.box !err_win 0 0;
       render_names phase;
-      render_score 0;
+      render_score score;
       render_turn turn;
       render_err "Welcome to battleCaml!";
       render_phase (str_of_phase phase);

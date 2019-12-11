@@ -5,6 +5,32 @@ open Ai_hard
 open Ai_easy
 open Ai_medium
 
+let rules = " 
+  Here is how you play, Good Luck!
+
+  This game functions on keyboard inputs and phases. There are 3 phases:
+    - Welcome Phase
+    - Placement Phase
+    - Play Phase
+
+  The first phase is the Welcome phase. Press 'P' to Play.
+
+  The Second phase is the Placement phase. The highlighted cursor 
+  indicates where the camls will be placed. You have 5 camls, one with
+  5 humps, one with 4 humps, two with 3 humps, and one with 2 humps. 
+  It is important to note that the coordinates of your caml placements 
+  cannot overlap. Here are the main keys you will use for the Place 
+
+  After placing your ships, the AI will also place its ships, and the play phase
+  begins. Here are the main keys you will use for the Play phase:
+    - 'W' moves your cursor up
+    - 'A' moves your cursor left
+    - 'S' moves your cursor down
+    - 'D' moves your cursor right
+    - 'F' fires where your cursor currently is
+    - 
+"
+
 type phase = Placement | Play | Menu
 let in_phase = ref Menu
 
@@ -19,8 +45,10 @@ let bullets = (Array.make_matrix 1 1 1)::[]
 
 
 let turn_count = ref 0
+let score = ref 0
 
 let incr_turn () = turn_count := !turn_count + 1
+let incr_score () = score := !score + 1
 
 let int_of_phase = function 
   | Placement -> 0
@@ -37,7 +65,7 @@ let handle_fire win b =
     | No_contact m -> incr_turn (); m
     | Already_hit m -> m 
     | Already_miss m -> m 
-    | Contact m -> incr_turn (); m
+    | Contact m -> incr_turn ();incr_score (); m
     | _ -> failwith "Unimplemented"
 
 (* let place_ship matrix ship_i x y = 
@@ -260,7 +288,7 @@ let powerup_placement powerups =
 (* The main recursive game loop *)
 let rec play_game b opp_b t = 
   let dt = Sys.time () -. t in
-  let ntime = render b opp_b (int_of_phase !in_phase) !turn_count dt in
+  let ntime = render b opp_b (int_of_phase !in_phase) !turn_count !score dt in
   match !in_phase with 
   | Placement -> 
     begin
