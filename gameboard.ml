@@ -2,17 +2,21 @@
 
 type coord = (int * int)
 
-type entry = Hit | Miss | Unhit | Empty
+type entry = Hit | Miss | Unhit | Empty | Collected | Uncollected
 
 type t = entry array array
 
 type ship = t
 
-type response =  Contact of t | No_contact of t | 
-                 Already_hit of t | Already_miss of t | Misc
+type response = Contact of t | No_contact of t | 
+                Already_hit of t | Already_miss of t | Misc
+
+type orientation = Vertical | Horizontal
+
+type powerup = Sea_mine | Bomb | Double_bullet | Points | Repair_kit
 
 exception Malformed 
-exception Out_of_bounds 
+exception Out_of_bounds
 
 (* Note to self: 
    For Array.make_matrix x y elt, we would read it as x rows of length y whose
@@ -20,7 +24,7 @@ exception Out_of_bounds
    Array.(i).(j) gives the val at row i, column j *)
 
 (* A 10x10 board of Empty values *)
-let init_matrix = Array.make_matrix 10 10 Empty
+let init_matrix () = Array.make_matrix 10 10 Empty
 
 (* Returns the 0-based index of [elem] in the list [lst] *)
 let rec index lst elem acc = 
@@ -46,21 +50,33 @@ let get_array_from i j arr =
 let create_ship len = Array.make len Unhit
 
 (* The standard game ship suite *)
-let caml_5 = create_ship 5
-let caml_4 = create_ship 4
-let caml_3 = create_ship 3
-let caml_3' = create_ship 3
-let caml_2 = create_ship 2
+let ships = Array.make 5 (Array.make 0 Unhit, Horizontal)
+let caml_5 = ships.(0) <- (create_ship 5, Horizontal)
+let caml_4 = ships.(1) <- (create_ship 4, Horizontal)
+let caml_3 = ships.(2) <- (create_ship 3, Horizontal)
+let caml_3' = ships.(3) <- (create_ship 3, Horizontal)
+let caml_2 = ships.(4) <- (create_ship 2, Horizontal)
 
-let ships = caml_5 :: caml_4 :: caml_3 :: caml_3' :: caml_2 :: []
+let opp_ships = Array.make 5 (Array.make 0 Unhit, Horizontal)
+let opp_5 = opp_ships.(0) <- (create_ship 5, Horizontal)
+let opp_4 = opp_ships.(1) <- (create_ship 4, Horizontal)
+let opp_3 = opp_ships.(2) <- (create_ship 3, Horizontal)
+let opp_3' = opp_ships.(3) <- (create_ship 3, Horizontal)
+let opp_2 = opp_ships.(4) <- (create_ship 2, Horizontal)
+
+let hard_mode_powerups = Sea_mine :: Bomb :: Double_bullet
+                         :: Points :: Repair_kit :: []
+let easy_mode_powerups = hard_mode_powerups @ hard_mode_powerups
 
 (* The single-character representation of Entry [e]. *)
 let string_of_entry e = 
   match e with 
   | Hit -> "H"
+  | Collected -> "C"
   | Miss -> "M" 
   | Unhit -> "." 
   | Empty -> "." 
+  | Uncollected -> "."
 
 (* Returns n % m, handling negative numbers *)
 let new_mod n m = (n + m) mod m
@@ -69,7 +85,7 @@ let new_mod n m = (n + m) mod m
 let get_row m num = m.(num)
 
 let demo_board = 
-  init_matrix
+  init_matrix ()
 
 (* Returns a new matrix where the rows of [m] become the columns of 
    [transpose m] *)
@@ -86,8 +102,10 @@ let fire (c:coord) m =
   match get_val_of_coord m c with
   | Empty -> m.(fst c).(snd c) <- Miss; No_contact m
   | Hit ->  Already_hit m
+  | Collected -> Already_hit m
   | Miss -> Already_miss m
   | Unhit -> m.(fst c).(snd c) <- Hit; Contact m
+  | Uncollected -> m.(fst c).(snd c) <- Collected; Contact m
 
 let second_elt lst = List.nth lst 1
 let third_elt lst = List.nth lst 2

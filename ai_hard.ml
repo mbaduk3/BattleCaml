@@ -65,7 +65,7 @@ let rec create_horizontal_lst tup acc num =
 are references to coordinate positions of the user's placed ships *)
 let rec ship_coordinates arr_to_lst acc = 
     match arr_to_lst with
-      | [] -> ref acc
+      | [] -> acc
       | h::t -> let (_, _, _, orientation) = h in
                 if orientation = Vertical then
                   (ship_coordinates t ((create_vertical_lst h [] 0)::acc))
@@ -136,7 +136,6 @@ let get_coord_of_hit reflst =
   let rnd_ind = Random.int (List.length !reflst) in
   List.nth !reflst rnd_ind
 
-(* NEED TO MODIFY SHIP LST TOO *)
 let ai_fire m ship_lst = 
   let curr_ship = ship_at_index (update_curr_ship_index ()) in
   match determine_hard_fire () with
