@@ -1,8 +1,8 @@
-open Gameboard
+(* open Gameboard
 open Random
 
 let empty_lst = ref []
-let ship_lst = ref []
+let ship_lst:int list = ref []
 let fire_lst = [true; false]
 let last_fire = ref false
 
@@ -136,7 +136,7 @@ let get_coord_of_hit reflst =
   let rnd_ind = Random.int (List.length !reflst) in
   List.nth !reflst rnd_ind
 
-let ai_fire m ship_lst = 
+(* let ai_fire m ship_lst = 
   let curr_ship = ship_at_index (update_curr_ship_index ()) in
   match determine_hard_fire () with
     | true -> let (x, y) = (get_coord_of_hit curr_ship) in
@@ -147,4 +147,4 @@ let ai_fire m ship_lst =
     | false -> let (x, y) = get_empty_coord (get_all_empty_coords m) in
               remove_empty (x, y) empty_lst;
                m.(x).(y) <- Miss;
-               m
+               m *) *)
