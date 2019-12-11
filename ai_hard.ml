@@ -4,12 +4,16 @@ open Random
 let empty_lst = ref []
 let ship_lst = ref []
 let fire_lst = [true; false]
+let last_fire = ref false
 
 (* [determine_hard_fire ()] has a 50% chance or returning true and a 50% chance
 of returning false. *)
 let determine_hard_fire () = 
-  let elt = Random.int 2 in
-  List.nth fire_lst elt
+  if !last_fire = true then
+    true
+  else
+    let elt = Random.int 2 in
+    List.nth fire_lst elt
 
 (* [get_all_empty_coords miss_coords] returns a list of coordinate pairs representing
 the coordinates of type Empty. *)
@@ -74,7 +78,7 @@ let shuffle lst =
   let sort = List.sort compare new_lst in
   List.map snd sort
 
-(* [current_ship_index] is a reference to a value between 0 and 4 inclusive*)
+(* [current_ship_index] is a reference to a value between 1 and 4 inclusive*)
 let next_index = ref 1
 
 let current_ship_index = ref 0
@@ -86,25 +90,37 @@ let new_index bound =
     current_ship_index := !next_index;
     next_index := succ (!next_index)
 
+(* [ships_at_index ind] returns the ship reference at  *)
+let ship_at_index ind = 
+  List.nth !ship_lst ind
+
 (* lst will be current lst being fired at *)
 let remove_coord_from_ship shipref coord = 
-  shipref := List.filter (fun c -> if c = coord then false else true) !shipref
-
-let remove_ship_if_empty () = 
-  ship_lst := List.filter (fun reflst -> if !reflst = [] then false else true) !ship_lst
+  shipref := List.filter (fun c -> if c = coord then false else true) !shipref;
+  shipref
+  
 
 let update_curr_ship_index () = 
-  if !(List.nth !ship_lst (!current_ship_index)) = [] then 
+  if !(ship_at_index !current_ship_index) = [] then 
   begin
-    remove_ship_if_empty ();
-    new_index (List.length !ship_lst);
+    let bound = (List.length !ship_lst) in
+    new_index bound;
     !current_ship_index
   end
   else
     !current_ship_index
 
-let get_curr_ship ships = 
-  List.nth ships (update_curr_ship_index ())
+let rec update_ship_lst (ship_lst:('a * 'b) list ref list ref) new_ship ind num = 
+  let update = ref [] in
+  (match !ship_lst with 
+    | [] -> ()
+    |  h::t -> if ind = num then
+                update := new_ship :: !update
+              else
+                update := !update @ t;
+                update_ship_lst {contents = t} new_ship ind (succ num));
+  ship_lst := !update
+              
 
 (* bangships should be !ship_lst *)
 let rec ai_win_condition bangships = 
@@ -120,12 +136,12 @@ let get_coord_of_hit reflst =
   let rnd_ind = Random.int (List.length !reflst) in
   List.nth !reflst rnd_ind
 
-let ai_fire m coords = 
-  ship_lst := ship_coordinates (Array.to_list(coords)) [];
-  let curr_ship = get_curr_ship !ship_lst in
+let ai_fire m ship_lst = 
+  let curr_ship = ship_at_index (update_curr_ship_index ()) in
   match determine_hard_fire () with
     | true -> let (x, y) = (get_coord_of_hit curr_ship) in
               remove_coord_from_ship curr_ship (x, y);
+              update_ship_lst
               m.(x).(y) <- Hit;
               m
     | false -> let (x, y) = get_empty_coord (get_all_empty_coords m) in

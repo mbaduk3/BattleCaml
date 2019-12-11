@@ -1,4 +1,4 @@
-MODULES=gameboard gameloop authors display command ai_medium ai_hard ai_easy ascii
+MODULES=gameboard gameloop authors display command ai_medium ai_hard ai_easy ascii test
 OBJECTS=$(MODULES:=.cmo)
 MLS=$(MODULES:=.ml)
 MLIS=$(MODULES:=.mli)
