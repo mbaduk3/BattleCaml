@@ -38,6 +38,14 @@ let make_new_mod_test
     let res = new_mod input_n input_m in 
     assert_equal ~printer:(string_of_int) expected res)
 
+let make_string_of_tup_test 
+  (name: string)
+  (input_tup: int*int)
+  (expected: string) : test = 
+  name >:: (fun _ -> 
+    let res = string_of_tuple input_tup in 
+    assert_equal expected res)
+
 let list_a = [1;2;3]
 let array_a = Array.make 5 "a"
 let array_b = Array.copy array_a
@@ -59,6 +67,7 @@ let gameboard_tests = [
   make_new_mod_test "regular mod" 5 3 2;
   make_new_mod_test "negative mod" (-3) 2 (-1);
   make_new_mod_test "mod by negative" 5 (-3) (2);
+  make_string_of_tup_test "tuple test" (5, 5) "(5, 5)";
 ]
 
 

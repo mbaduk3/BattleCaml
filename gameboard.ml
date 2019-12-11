@@ -154,8 +154,8 @@ let handle_powerup c m p =
       check_explosion (fst c + 1) (snd c + 1) m;
     end
 
-(** [fire c m] modifies the board [m] based on the entry value at coordinates [c]. 
-   Returns a response type containing the new board. *)
+(** [fire c m] modifies the board [m] based on the entry value at 
+    coordinates [c]. Returns a response type containing the new board. *)
 let fire (c:coord) m = 
   match get_val_of_coord m c with
   | Empty -> m.(fst c).(snd c) <- Miss; No_contact m
