@@ -1,6 +1,7 @@
 open Curses
 open Gameboard
 open Ascii
+open Rules
 
 let scr = ref (initscr ())
 (* Max x, y are the dimensions of the terminal window *)
@@ -17,6 +18,8 @@ let score_win = ref null_window
 let meta_win = ref null_window
 let err_win = ref null_window
 let sel_win = ref null_window
+let rule_win = ref null_window
+let inner_rule_win = ref null_window
 let cur_x = ref 1
 let cur_y = ref 1
 (* Crosshair x and y refer to the top-left coord of the crosshair matrix *)
@@ -59,6 +62,8 @@ let placement_init () =
   ignore(Curses.nodelay !b_win true);
   score_win := (newwin 3 15 3 54);
   meta_win := (newwin 9 15 6 54);
+  rule_win := (newwin 30 25 2 71);
+  inner_rule_win := (newwin 28 23 4 72);
   err_win := (newwin 3 40 15 29);
   ignore(mvwin !b_win 3 29);
   ignore(wrefresh !scr)
@@ -75,6 +80,10 @@ let play_init () =
   ignore(wrefresh !err_win);
   ignore(wclear !meta_win);
   ignore(wrefresh !meta_win);
+  ignore(mvwin !rule_win 2 87);
+  ignore(mvwin !inner_rule_win 4 88);
+  ignore(wrefresh !rule_win);
+  ignore(wrefresh !inner_rule_win);
   ignore(wclear !scr);
   ignore(wrefresh !scr)
 
@@ -238,6 +247,10 @@ let render_names phase =
   | 1 -> ignore(render_names_play ())
   | _ -> ()
 
+let render_rules rules_str = 
+  (* ignore(box !rule_win 0 0); *)
+  ignore(mvwaddstr !rule_win 0 1 rules_str)
+
 let render_score score = 
   ignore(mvwaddstr !score_win 1 1 ("Score: " ^ (string_of_int score)))
 
@@ -302,6 +315,7 @@ let render b opp_b phase turn score err dt =
       render_board b !b_win phase dt;
       render_names phase;
       render_score 0;
+      render_rules placement_rules;
       render_turn turn;
       render_err err;
       render_phase (str_of_phase phase);
@@ -313,6 +327,7 @@ let render b opp_b phase turn score err dt =
       ignore(mvwaddstr !meta_win 2 1 "-------------");
       render_names phase;
       render_score score;
+      render_rules play_rules;
       render_turn turn;
       render_err err;
       render_phase (str_of_phase phase);
@@ -327,6 +342,7 @@ let render b opp_b phase turn score err dt =
   Curses.wrefresh !err_win;
   Curses.wrefresh !meta_win;
   Curses.wrefresh !sel_win;
+  Curses.wrefresh !rule_win;
   Curses.wrefresh !scr;
   Sys.time ()
 
