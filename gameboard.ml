@@ -166,6 +166,14 @@ let fire (c:coord) m =
   | Uncollected p -> m.(fst c).(snd c) <- Collected;
     handle_powerup c m p; Contact m
 
+let string_of_response r = 
+  match r with 
+    | Contact m -> "contact"
+    | No_contact m -> "no contact"
+    | Already_hit m -> "already hit"
+    | Already_miss m -> "already miss"
+    | Misc -> "misc"
+
 let second_elt lst = List.nth lst 1
 let third_elt lst = List.nth lst 2
 
@@ -175,13 +183,13 @@ let string_of_tuple tup =
   let y = snd tup in
   "(" ^ string_of_int x ^ ", " ^ string_of_int y ^ ")"
 
-let give_hint matrix = 
+(* let give_hint matrix = 
   for i = 0 to Array.length matrix do
     if matrix.(i).(4) = Unhit then 
       print_string ("\nThere is an unhit caml at " ^ string_of_tuple (i, 4) ^ "\n")
     else
       print_string "\nCouldn't Find Anything For You. Just Keep Firing!\n"
-  done
+  done *)
 
 (** [format_row row] prints the elements of array [row] to the console *)
 let format_row (row: entry array) = 
