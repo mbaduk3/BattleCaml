@@ -21,6 +21,8 @@ let sel_win = ref null_window
 let rule_win = ref null_window
 let caml_win = ref null_window
 let inner_rule_win = ref null_window
+let win_win = ref null_window
+let lose_win = ref null_window
 let cur_x = ref 1
 let cur_y = ref 1
 (* Crosshair x and y refer to the top-left coord of the crosshair matrix *)
@@ -90,9 +92,36 @@ let play_init () =
   ignore(wclear !scr);
   ignore(wrefresh !scr)
 
+let play_end () = 
+  ignore(wclear !scr);
+  ai_win := null_window;
+  score_win := null_window;
+  meta_win := null_window;
+  err_win := null_window;
+  rule_win := null_window;
+  caml_win := null_window;
+  inner_rule_win := null_window
+
+
 (* Initalize the menu phase windows *)
 let menu_init () = 
   sel_win := (newwin 31 80 0 3)
+
+let menu_end () = 
+  sel_win := null_window
+
+let win_init () = 
+  win_win := (newwin 31 80 0 3)
+
+let win_end () = 
+  win_win := null_window
+
+let lose_init () = 
+  lose_win := (newwin 31 90 10 3)
+
+let lose_end () = 
+  lose_win := null_window
+
 
 (* True if the drawing cursor coordinates are equal to a crosshair coord.
    False otherwise *)
@@ -301,8 +330,19 @@ let menu_refresh win =
   ignore(mvwhline !scr (!max_y - 3) 0 0 1000);
   camel_menu_fix win
 
-let menu_helper win phase dt = 
-  menu_refresh win
+let win_refresh win = 
+  let h, w = getmaxyx !win_win in 
+  ignore(mvwin !win_win (!max_y / 2 - (h / 2)) (!max_x / 2 - (w / 2)));
+  ignore(mvwhline !scr 3 0 0 1000);
+  ignore(mvwhline !scr (!max_y - 3) 0 0 1000);
+  ignore(mvwaddstr !win_win 0 1 win_msg)
+
+let lose_refresh win = 
+  let h, w = getmaxyx !lose_win in 
+  ignore(mvwin !lose_win (!max_y / 2 - (h / 2)) (!max_x / 2 - (w / 2)));
+  ignore(mvwhline !scr 3 0 0 1000);
+  ignore(mvwhline !scr (!max_y - 3) 0 0 1000);
+  ignore(mvwaddstr !lose_win 0 1 lose_msg)
   
 (* Refreshes max_x, max_y to the current terminal size *)
 let update_maxs () =
@@ -342,7 +382,9 @@ let render b opp_b phase turn score err dt =
       render_phase (str_of_phase phase);
       render_board opp_b !ai_win phase dt;
       render_ai_board b !b_win phase dt
-    | 2 -> menu_helper !scr phase dt
+    | 2 -> menu_refresh !scr
+    | 3 -> win_refresh !scr
+    | 4 -> lose_refresh !scr
     | _ -> ()
   end;
   Curses.wrefresh !b_win;
@@ -351,6 +393,8 @@ let render b opp_b phase turn score err dt =
   Curses.wrefresh !err_win;
   Curses.wrefresh !meta_win;
   Curses.wrefresh !sel_win;
+  Curses.wrefresh !win_win;
+  Curses.wrefresh !lose_win;
   Curses.wrefresh !rule_win;
   Curses.wrefresh !caml_win;
   Curses.wrefresh !scr;

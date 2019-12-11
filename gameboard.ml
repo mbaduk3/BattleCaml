@@ -87,6 +87,9 @@ let get_row m num = m.(num)
 let demo_board = 
   init_matrix ()
 
+let nuke_board = 
+  Array.make_matrix 10 10 Hit
+
 (* Returns a new matrix where the rows of [m] become the columns of 
    [transpose m] *)
 let transpose m = 
