@@ -43,9 +43,9 @@ let starttime = Sys.time ()
 
 let bullets = (Array.make_matrix 1 1 1)::[]
 
-
 let turn_count = ref 0
 let score = ref 0
+let err_msg = ref "Welcome to BattleCamL! Place the ships:"
 
 let incr_turn () = turn_count := !turn_count + 1
 let incr_score () = score := !score + 1
@@ -55,12 +55,20 @@ let int_of_phase = function
   | Play -> 1
   | Menu -> 2
 
+let update_err = function 
+  | No_contact _ -> err_msg := "You missed... Try again!" 
+  | Already_hit _ -> err_msg := "You already hit there!"
+  | Already_miss _ -> err_msg := "Yoy already missed there!"
+  | Contact _ -> err_msg := "You hit a ship, nice!"
+  | _ -> err_msg := "BaTtLeCaMl"
+
 (* Change later to display responsive results *)
 let handle_fire win b = 
   if (!ship_i != 5) then b 
   else
     let (x, y) = (!crosshair_y - 1, !crosshair_x - 1) in
     let res = Gameboard.fire (x, y) b in
+    update_err res;
     match res with 
     | No_contact m -> incr_turn (); m
     | Already_hit m -> m 
@@ -288,7 +296,7 @@ let powerup_placement powerups =
 (* The main recursive game loop *)
 let rec play_game b opp_b t = 
   let dt = Sys.time () -. t in
-  let ntime = render b opp_b (int_of_phase !in_phase) !turn_count !score dt in
+  let ntime = render b opp_b (int_of_phase !in_phase) !turn_count !score  !err_msg dt in
   match !in_phase with 
   | Placement -> 
     begin
