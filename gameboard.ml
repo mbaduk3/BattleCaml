@@ -10,10 +10,12 @@ type orientation = Vertical | Horizontal
 exception Malformed 
 exception Out_of_bounds
 
-(** [init_matrix ()] is a 2-dimensional 10x10 array of [Empty] values *)
+(** [init_matrix ()] is a 2-dimensional 10x10 array of [Empty] values. *)
 let init_matrix () = Array.make_matrix 10 10 Empty
 
-(** [index lst elem acc] is the 0-based index of [elem] in the list [lst] *)
+(** [index lst elem acc] is the 0-based index of [elem] in the list [lst].
+    Requires: [elem] is in the list [lst]. 
+    Returns [acc] if [lst] is the empty list. *)
 let rec index lst elem acc = 
   match lst with
   | [] -> acc
@@ -65,7 +67,8 @@ let string_of_entry e =
   | Empty -> "." 
   | Uncollected p -> "."
 
-(** [new_mod n m] is n % m, handling negative numbers *)
+(** [new_mod n m] is n % m, handling negative numbers. 
+    Requires: m is not 0. *)
 let new_mod n m = (n + m) mod m
 
 (** [get_row n num] is the row at index [num] in matrix [m] *)
