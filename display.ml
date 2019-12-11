@@ -287,7 +287,7 @@ let update_maxs () =
   max_x := x;
   max_y := y
 
-let render b opp_b phase turn score dt =
+let render b opp_b phase turn score err dt =
   begin
   update_maxs ();
   match phase with 
@@ -300,7 +300,7 @@ let render b opp_b phase turn score dt =
       render_names phase;
       render_score 0;
       render_turn turn;
-      render_err "Welcome to battleCaml!";
+      render_err err;
       render_phase (str_of_phase phase);
     | 1 -> 
       Curses.wborder !b_win 0 0 0 0 0 0 0 0;
@@ -311,7 +311,7 @@ let render b opp_b phase turn score dt =
       render_names phase;
       render_score score;
       render_turn turn;
-      render_err "Welcome to battleCaml!";
+      render_err err;
       render_phase (str_of_phase phase);
       render_board opp_b !ai_win phase dt;
       render_ai_board b !b_win phase dt
