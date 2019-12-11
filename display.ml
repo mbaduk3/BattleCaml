@@ -19,6 +19,7 @@ let meta_win = ref null_window
 let err_win = ref null_window
 let sel_win = ref null_window
 let rule_win = ref null_window
+let caml_win = ref null_window
 let inner_rule_win = ref null_window
 let cur_x = ref 1
 let cur_y = ref 1
@@ -65,6 +66,7 @@ let placement_init () =
   rule_win := (newwin 30 25 2 71);
   inner_rule_win := (newwin 28 23 4 72);
   err_win := (newwin 3 40 15 29);
+  caml_win := (newwin 20 49 18 29);
   ignore(mvwin !b_win 3 29);
   ignore(wrefresh !scr)
 
@@ -81,6 +83,7 @@ let play_init () =
   ignore(wclear !meta_win);
   ignore(wrefresh !meta_win);
   ignore(mvwin !rule_win 2 87);
+  ignore(mvwin !caml_win 18 20);
   ignore(mvwin !inner_rule_win 4 88);
   ignore(wrefresh !rule_win);
   ignore(wrefresh !inner_rule_win);
@@ -285,6 +288,10 @@ let camel_menu_col win =
 let camel_menu_fix win = 
   ignore(mvwaddstr !sel_win 1 1 camel1_str)
 
+let render_camel str = 
+  ignore(mvwaddstr !caml_win 0 1 str)
+  (* ignore(box !caml_win 0 0) *)
+
 let menu_refresh win = 
   ignore(start_color ());
   (* ignore(mvwaddstr !scr 1 1 camel1_str); *)
@@ -318,6 +325,7 @@ let render b opp_b phase turn score err dt =
       render_rules placement_rules;
       render_turn turn;
       render_err err;
+      render_camel camel2_str;
       render_phase (str_of_phase phase);
     | 1 -> 
       Curses.wborder !b_win 0 0 0 0 0 0 0 0;
@@ -330,6 +338,7 @@ let render b opp_b phase turn score err dt =
       render_rules play_rules;
       render_turn turn;
       render_err err;
+      render_camel camel3_str;
       render_phase (str_of_phase phase);
       render_board opp_b !ai_win phase dt;
       render_ai_board b !b_win phase dt
@@ -343,6 +352,7 @@ let render b opp_b phase turn score err dt =
   Curses.wrefresh !meta_win;
   Curses.wrefresh !sel_win;
   Curses.wrefresh !rule_win;
+  Curses.wrefresh !caml_win;
   Curses.wrefresh !scr;
   Sys.time ()
 
