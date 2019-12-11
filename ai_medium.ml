@@ -73,6 +73,7 @@ let get_valid_rndm_coord m =
       | Hit -> redo m
       | Miss -> redo_flip m
       | Unhit -> fire_unhit m
+      | _ -> redo m
     done
   done
 

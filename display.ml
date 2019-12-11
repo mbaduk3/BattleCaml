@@ -60,7 +60,6 @@ let incr_cur b =
 (* Initalize the placement phase windows *)
 let placement_init () = 
   ignore(wclear !scr);
-  let y,x = getmaxyx !scr in
   b_win := (newwin 12 (12 * 2 - 1) 1 5);
   ignore(Curses.nodelay !b_win true);
   score_win := (newwin 3 15 3 54);
@@ -350,6 +349,19 @@ let update_maxs () =
   max_x := x;
   max_y := y
 
+let refresh_all () = 
+  ignore(Curses.wrefresh !b_win);
+  ignore(Curses.wrefresh !score_win);
+  ignore(Curses.wrefresh !ai_win);
+  ignore(Curses.wrefresh !err_win);
+  ignore(Curses.wrefresh !meta_win);
+  ignore(Curses.wrefresh !sel_win);
+  ignore(Curses.wrefresh !win_win);
+  ignore(Curses.wrefresh !lose_win);
+  ignore(Curses.wrefresh !rule_win);
+  ignore(Curses.wrefresh !caml_win);
+  ignore(Curses.wrefresh !scr)
+
 let render b opp_b phase turn score err dt =
   begin
   update_maxs ();
@@ -364,7 +376,7 @@ let render b opp_b phase turn score err dt =
       render_score 0;
       render_rules placement_rules;
       render_turn turn;
-      render_err err;
+      ignore(render_err err);
       render_camel camel2_str;
       render_phase (str_of_phase phase);
     | 1 -> 
@@ -377,7 +389,7 @@ let render b opp_b phase turn score err dt =
       render_score score;
       render_rules play_rules;
       render_turn turn;
-      render_err err;
+      ignore(render_err err);
       render_camel camel3_str;
       render_phase (str_of_phase phase);
       render_board opp_b !ai_win phase dt;
@@ -387,17 +399,7 @@ let render b opp_b phase turn score err dt =
     | 4 -> lose_refresh !scr
     | _ -> ()
   end;
-  Curses.wrefresh !b_win;
-  Curses.wrefresh !score_win;
-  Curses.wrefresh !ai_win;
-  Curses.wrefresh !err_win;
-  Curses.wrefresh !meta_win;
-  Curses.wrefresh !sel_win;
-  Curses.wrefresh !win_win;
-  Curses.wrefresh !lose_win;
-  Curses.wrefresh !rule_win;
-  Curses.wrefresh !caml_win;
-  Curses.wrefresh !scr;
+  refresh_all ();
   Sys.time ()
 
 let exit_display () = 
