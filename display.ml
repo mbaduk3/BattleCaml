@@ -121,7 +121,7 @@ let handle_miss b win dt =
 let handle_unhit b win phase dt = 
   if (phase = 1) then 
     (*To show ai ships, toggle this last option *)
-    ignore(Curses.mvwaddch win !cur_y (!cur_x*2) unhit_ch)
+    ignore(Curses.mvwaddch win !cur_y (!cur_x*2) empty_ch)
   else 
     ignore(Curses.mvwaddch win !cur_y (!cur_x*2) unhit_ch);
   incr_cur b;
@@ -241,8 +241,11 @@ let render_names phase =
 let render_score score = 
   ignore(mvwaddstr !score_win 1 1 ("Score: " ^ (string_of_int score)))
 
-let render_err err = 
-  ignore(mvwaddstr !err_win 1 1 err)
+let render_err err =
+  ignore(werase !err_win);
+  ignore(Curses.box !err_win 0 0);
+  ignore(mvwaddstr !err_win 1 1 err);
+  wrefresh !err_win
 
 let render_turn turn = 
   let turn' = turn / 2 in 
@@ -255,7 +258,7 @@ let str_of_phase = function
   | _ -> raise Out_of_bounds
 
 let render_phase phase = 
-  ignore(mvwaddstr !meta_win 2 1 phase)
+  ignore(mvwaddstr !meta_win 3 1 phase)
 
 let camel_menu_col win = 
   ignore(mvwaddstr !sel_win 1 1 camel_menu_str);
@@ -295,7 +298,7 @@ let render b opp_b phase turn score err dt =
       Curses.wborder !b_win 0 0 0 0 0 0 0 0;
       Curses.box !score_win 0 0;
       Curses.box !meta_win 0 0;
-      Curses.box !err_win 0 0;
+      ignore(mvwaddstr !meta_win 2 1 "-------------");
       render_board b !b_win phase dt;
       render_names phase;
       render_score 0;
@@ -307,7 +310,7 @@ let render b opp_b phase turn score err dt =
       Curses.box !ai_win 0 0;
       Curses.box !score_win 0 0;
       Curses.box !meta_win 0 0;
-      Curses.box !err_win 0 0;
+      ignore(mvwaddstr !meta_win 2 1 "-------------");
       render_names phase;
       render_score score;
       render_turn turn;

@@ -45,7 +45,7 @@ let bullets = (Array.make_matrix 1 1 1)::[]
 
 let turn_count = ref 0
 let score = ref 0
-let err_msg = ref "Welcome to BattleCamL! Place your ships:"
+let err_msg = ref "Welcome to BattleCamL! Place the ships:"
 
 let incr_turn () = turn_count := !turn_count + 1
 let incr_score () = score := !score + 1
