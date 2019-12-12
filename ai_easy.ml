@@ -44,6 +44,7 @@ let ai_fire m =
     match m.(x).(y) with
       | Unhit ->  m.(x).(y) <- Hit; m
       | Empty -> m.(x).(y) <- Miss; m
-      | _ -> raise (Invalid_argument "This will not be possible")
+      | Hit -> m
+      | Miss -> m 
     else
       raise (Invalid_argument "This will not be possible")

@@ -31,26 +31,47 @@ let rules = "
     - 
 "
 
-type phase = Placement | Play | Menu
+type phase = Placement | Play | Menu | Win | Lose
 let in_phase = ref Menu
 
 (** [ship_i] is a counter for ships to be placed in the [Placement] phase. *)
 let ship_i = ref 0
+let surrender = ref false
 
-(** [ship_coordinates] is an array representing the coordinates, length, and
-    orientation of ships placed on your board. *)
+(* [modes] is a list of the possible modes *)
+let modes = [Gameboard.Easy; Gameboard.Medium; Gameboard.Hard]
+let mode_set = ref false
+let curr_mode = ref Medium
+
+(* [get_rnd_elt bound] is an integer between 0 (inclusive) and bound (exclusive) *)
+let get_rnd_elt bound = Random.int bound
+
+(* [set_mode ()] chooses the mode for the given play randomly *)
+let set_mode () = 
+  if !mode_set = false then
+    begin
+      mode_set := true;
+      curr_mode := List.nth modes (get_rnd_elt 3);
+      !curr_mode
+    end
+  else
+    !curr_mode
+
+(* [ship_coordinates] is an array of tuples: each holds the x,y of the 
+   upper-left coordinate of the ship, the length, and orientation *)
 let ship_coordinates = Array.make 5 (0, 0, 0, Horizontal)
 
 (** [opp_coordinates] is an array representing the coordinates, length, and
     orientation of ships placed on your opponent's board. *)
 let opp_coordinates = Array.make 5 (0, 0, 0, Horizontal)
-let starttime = Sys.time ()
 
 let bullets = (Array.make_matrix 1 1 1)::[]
 
-
+let starttime = Sys.time ()
 let turn_count = ref 0
 let score = ref 0
+let err_msg = ref "Welcome to BattleCamL! Place the ships:"
+let debug = ref true
 
 let incr_turn () = turn_count := !turn_count + 1
 let incr_score () = score := !score + 1
@@ -59,6 +80,15 @@ let int_of_phase = function
   | Placement -> 0
   | Play -> 1
   | Menu -> 2
+  | Win -> 3
+  | Lose -> 4
+
+let update_err = function 
+  | No_contact _ -> err_msg := "You missed... Try again!" 
+  | Already_hit _ -> err_msg := "You already hit there!"
+  | Already_miss _ -> err_msg := "Yoy already missed there!"
+  | Contact _ -> err_msg := "You hit a ship, nice!"
+  | _ -> err_msg := "BaTtLeCaMl"
 
 (* Change later to display responsive results *)
 let handle_fire win b = 
@@ -66,6 +96,7 @@ let handle_fire win b =
   else
     let (x, y) = (!crosshair_y - 1, !crosshair_x - 1) in
     let res = Gameboard.fire (x, y) b in
+    update_err res;
     match res with 
     | No_contact m -> incr_turn (); m
     | Already_hit m -> m 
@@ -73,24 +104,39 @@ let handle_fire win b =
     | Contact m -> incr_turn ();incr_score (); m
     | _ -> failwith "Unimplemented"
 
-(** [handle_rotate ships ship] rotates ship at index [ship] of array [ships]. *)
+(** [handle_rotate ships ship] inverts the orientation of the ship at 
+    index [ship] of array [ships]. *)
 let handle_rotate ships ship =
   if snd ships.(ship) = Horizontal
   then ships.(ship) <- (fst (ships.(ship)), Vertical)
   else ships.(ship) <- (fst (ships.(ship)), Horizontal)
 
+(*[check_win b] returns whether there are no remaining [Unhit] elements in [b]*)
+let check_win b = 
+  let win = ref true in 
+  for i = 0 to (Array.length b - 1) do 
+    for j = 0 to (Array.length b.(0) - 1) do 
+      if (b.(i).(j) = Unhit) then 
+        win := false 
+      else ()
+    done 
+  done;
+  !win 
+  
 (** [check_placement coords ships ship x y orientation] checks if ship at index
     [ship] of array [ships] can be placed at coordinates [x], [y] without
-    overlapping with other ships in array [coords]. *)
+    overlapping with other ships in array [coords]. *)      
 let check_placement coords ships ship x y orientation =
   let ship_len = Array.length (fst (ships.(ship))) in
   for i = 0 to ship - 1 do
     match coords.(i) with
-    | (x', y', len', ori') -> if orientation = Horizontal && ori' = Horizontal
+    | (x', y', len', ori') -> 
+      if orientation = Horizontal && ori' = Horizontal
       then
         begin
-          if y = y' && (x + ship_len > x' && x + ship_len < x' + len'
-                        || x' + len' > x && x' < x)
+          if y = y' && 
+            (x + ship_len > x' && x + ship_len < x' + len'
+            || x' + len' > x && x' < x)
           then raise (Invalid_argument "ship cannot be placed here")
         end
       else if orientation = Horizontal && ori' = Vertical then
@@ -189,22 +235,45 @@ let update_cur_ship () =
     let s,orient = Array.get ships (!ship_i) in
     crosshair_mat := cross_mat_of_ship s (orient)
 
-(** [change_phase p] changes phase to phase [p] *)
-let change_phase p =
-  update_cur_ship ();
-  match p with 
-  | Placement -> 
-    let s,orient = Array.get ships (!ship_i) in 
-    crosshair_mat := cross_mat_of_ship s orient;
-    placement_init ();
-    in_phase := Placement
-  | Play -> 
-    play_init ();
-    in_phase := Play
-  | Menu -> 
-    menu_init ();
-    in_phase := Menu
+(* Resets the internal variables of the game. *)
+let reset_game () = 
+  ship_i := 0;
+  turn_count := 0;
+  score := 0;
+  cur_x := 1;
+  cur_y := 1;
+  err_msg := "Welcome to BattleCamL! Place the ships:";
+  surrender := false
 
+(** [change_phase p] changes the internal phase to phase [p] *)
+let change_phase p =
+  match p with 
+    | Placement -> 
+        update_cur_ship ();
+        reset_game ();
+        menu_end ();
+        win_end ();
+        lose_end ();
+        let s,orient = Array.get ships (!ship_i) in 
+        crosshair_mat := cross_mat_of_ship s orient;
+        placement_init ();
+        in_phase := Placement
+    | Play -> 
+        update_cur_ship ();
+        play_init ();
+        in_phase := Play
+    | Menu -> 
+        menu_init ();
+        in_phase := Menu
+    | Win -> 
+        play_end ();
+        win_init ();
+        in_phase := Win
+    | Lose -> 
+        play_end ();
+        lose_init ();
+        in_phase := Lose
+        
 (** [handle_placement win b rot] places up to 5 ships on board [b] and changes
     phase to [Play] when 5 ships are placed. *)
 let handle_placement win b rot =
@@ -248,13 +317,45 @@ let handle_input win b =
     handle_placement win b false; b
   | Rotate -> cur_timer := 0.;
     handle_placement win b true; b
+  | Nuke -> cur_timer := 0.;
+    nuke_board
+  | Surrender -> cur_timer := 0.;
+    surrender := true; b
   | Quit -> ignore(exit_display ()); b
   | _ -> b
 
+let ship_lst = ref []
+let empty_lst = ref []
+let empty_lst_made = ref false
+let ship_lst_made = ref false
+
+let init_ship_lst () =
+  if !ship_lst_made = false then
+    begin
+    ship_lst_made := true;
+    ship_lst := Gameboard.ship_coordinates (Array.to_list ship_coordinates) [];
+    ship_lst
+    end
+  else
+    ship_lst
+
+let init_empty_lst m = 
+  if !empty_lst_made = false then
+    begin
+    empty_lst_made := true;
+    empty_lst := Ai_hard.get_all_empty_coords m empty_lst;
+    empty_lst
+    end
+  else
+    empty_lst
+
 (* Blank for now *)
 let ai_fire opp_b = 
-  turn_count := !turn_count + 1; 
-  Ai_medium.ai_fire opp_b
+  turn_count := !turn_count + 1;
+  match set_mode () with
+    | Hard -> Ai_hard.ai_fire opp_b (init_ship_lst()) (init_empty_lst opp_b)
+    | Medium -> Ai_medium.ai_fire opp_b
+    | Easy -> Ai_easy.ai_fire opp_b
 
 (** [ai_placement ()] is a board with ships randomly placed on it. *)
 let ai_placement () =
@@ -302,38 +403,46 @@ let powerup_placement powerups =
 (* The main recursive game loop *)
 let rec play_game b opp_b t = 
   let dt = Sys.time () -. t in
-  let ntime = render b opp_b (int_of_phase !in_phase) !turn_count !score dt in
+  let ntime = render b opp_b (int_of_phase !in_phase) !turn_count !score  !err_msg dt in
   match !in_phase with 
   | Placement -> 
     begin
       update_cur_ship ();
       if (!turn_count mod 2 = 0) then
         let b' = handle_input !Display.b_win b in
+        if (!surrender = true) then 
+          change_phase Lose;
         play_game b' opp_b ntime
       else 
         let opp_b' = ai_fire opp_b in 
         play_game b opp_b' t
     end
   | Play ->
-    begin
+      begin
       if (!turn_count mod 2 = 0) then
         let opp_b' = handle_input !Display.b_win opp_b in
+        if (check_win opp_b') then 
+          change_phase Win;
+        if (!surrender = true) then 
+          change_phase Lose;
         play_game b opp_b' ntime
       else 
         let b' = ai_fire b in 
+        if (check_win b') then 
+          change_phase Lose;
         play_game b' opp_b t
     end
-  | Menu -> 
+  | Menu | Win | Lose -> 
     begin 
       ignore(handle_input_menu !scr b);
-      play_game b opp_b t
+      play_game (init_matrix ()) (powerup_placement easy_mode_powerups) t
     end
 
 let main () = 
   let dt = Sys.time () -. starttime in
   print_string "Welcome!";
   change_phase Menu;
-  play_game demo_board (powerup_placement easy_mode_powerups) dt
+  play_game demo_board demo_board dt
 
 let () = main ()
 
