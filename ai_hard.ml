@@ -1,150 +1,150 @@
-(* open Gameboard
+open Gameboard
 open Random
 
-let empty_lst = ref []
-let ship_lst:int list = ref []
 let fire_lst = [true; false]
-let last_fire = ref false
 
 (* [determine_hard_fire ()] has a 50% chance or returning true and a 50% chance
 of returning false. *)
 let determine_hard_fire () = 
-  if !last_fire = true then
-    true
-  else
     let elt = Random.int 2 in
     List.nth fire_lst elt
 
 (* [get_all_empty_coords miss_coords] returns a list of coordinate pairs representing
 the coordinates of type Empty. *)
-let get_all_empty_coords m = 
+let empty_coords_calculated = ref false
+
+let get_all_empty_coords m reflst = 
+  if !empty_coords_calculated = false then
+  begin
   for i = 0 to Array.length m - 1 do
     for j = 0 to Array.length m.(i) - 1 do
       match m.(i).(j) with
-        | Empty ->  empty_lst := (i, j)::!empty_lst
+        | Empty -> reflst := (i, j):: !reflst
         | _ -> ()
     done
   done;
-  empty_lst
+  empty_coords_calculated := true;
+  !reflst
+  end
+  else
+    !reflst
 
 (* [remove_empty coord reflst] *)
 let remove_empty coord reflst = 
-  reflst := List.filter (fun lst -> if lst = coord then false else true) !reflst
+  reflst := List.filter (fun c -> if c = coord then false else true) !reflst
+
+let print_tuple tup = 
+  match tup with
+    | (a, b) -> let aval = string_of_int a 
+                      in let bval = string_of_int b in
+      (print_string ("(" ^ aval ^ ", " ^ bval ^ ") "))
+
+let rec index lst elt num = 
+  match lst with
+    | [] -> num
+    | h::t -> if h = elt then num else index t elt (succ num)
 
 (* [get_empty_coord miss_coords] returns a list of coordinate pairs representing
 the coordinates of type Empty. *)
 let get_empty_coord miss_coords = 
   let rnd_ind = Random.int (List.length !miss_coords) in
-  let empty_coord = List.nth !miss_coords rnd_ind in
-  remove_empty empty_coord empty_lst;
-  empty_coord
-
-(* [thd tup] returns the third element of [tup], which is represented by 
-(x, y, len, orientation), thus returning the value of len *)
-let thd tup = 
-  match tup with
-    | (_, _, t, _) -> t
-
-(* [create_vertical_lst tup acc num] transforms [tup] into a list of coordinate pairs
-that describe the position of each of the user's placed vertical ships.*)
-let rec create_vertical_lst tup acc num = 
-  match num with
-    | num when num < (thd tup) -> 
-      let (x, y, _, _) = tup in (create_vertical_lst tup ((x, y+num)::acc) (succ num))
-    | _ -> ref (List.rev acc)
-
-(* [create_horizontal_lst tup acc num] transforms [tup] into a list of coordinate pairs
-that describe the position of each of the user's placed horizontal ships.*)
-let rec create_horizontal_lst tup acc num = 
-  match num with
-    | num when num < (thd tup) -> 
-      let (x, y, _, _) = tup in create_horizontal_lst tup ((x+num, y)::acc) (succ num)
-    | _ -> ref (List.rev acc)
-
-(* [ship_coordinates arr_to_lst acc] returns a reference of [arr_to_lst] whose elements
-are references to coordinate positions of the user's placed ships *)
-let rec ship_coordinates arr_to_lst acc = 
-    match arr_to_lst with
-      | [] -> acc
-      | h::t -> let (_, _, _, orientation) = h in
-                if orientation = Vertical then
-                  (ship_coordinates t ((create_vertical_lst h [] 0)::acc))
-                else
-                  (ship_coordinates t ((create_horizontal_lst h [] 0)::acc))
-
-let shuffle lst =
-  let func = (fun tup -> (Random.bits (), tup)) in
-  let new_lst = List.map func lst in
-  let sort = List.sort compare new_lst in
-  List.map snd sort
+  print_string "\n";
+  print_string "ERROR IS EMPTY COORD: ";
+  print_string "LENGTH: ";
+  print_int (List.length !miss_coords);
+  print_string " INDEX: ";
+  print_int (rnd_ind);
+  print_string "\n";
+  let (x, y) = List.nth !miss_coords rnd_ind in
+  (* print_tuple (x, y); *)
+  remove_empty (x, y) miss_coords;
+  (x, y)
 
 (* [current_ship_index] is a reference to a value between 1 and 4 inclusive*)
-let next_index = ref 1
+let current_ship_index = ref 0;;
 
-let current_ship_index = ref 0
+let curr_elt = 0;;
 
-(* [new_index bound] is an integer to represent a new index into the list of ships
-to be fired at. *)
-let new_index bound = 
-  if !next_index < bound then
-    current_ship_index := !next_index;
-    next_index := succ (!next_index)
+(* [ships_at_index ind] returns the ship at  *)
+let ship_at_index cv ind = 
+  List.nth !cv ind
+;;
 
-(* [ships_at_index ind] returns the ship reference at  *)
-let ship_at_index ind = 
-  List.nth !ship_lst ind
+let rec update_ship_index lst_of_lst num = 
+  let first_non_empty_found = ref false in
+  match lst_of_lst with
+    | [] -> current_ship_index := num
+    | h::t -> if h = [] && !first_non_empty_found = false then
+               update_ship_index t (succ num)
+               else
+               begin
+               first_non_empty_found := true;
+               update_ship_index t num
+               end
+
+let get_coord_of_hit ship = 
+  List.nth ship curr_elt
+
+let len_of_curr_ship ship = 
+  List.length (ship);;
+
+let filter_coord (lst : (int * int) list) (coord : int * int) = 
+  List.filter (fun c -> if c = coord then false else true) lst;;
+
+let rec replace lst ind elt =
+  match lst with
+  | [] -> lst
+  | h::t -> if ind = 0 then
+              elt::(replace t (ind - 1) elt)
+            else
+              h::(replace t (ind - 1) elt)
+;;
+
+let filter_ships ship_lst ship_ind new_ship =
+  replace ship_lst ship_ind new_ship
+;;
 
 (* lst will be current lst being fired at *)
-let remove_coord_from_ship shipref coord = 
-  shipref := List.filter (fun c -> if c = coord then false else true) !shipref;
-  shipref
-  
+let update_ship_lst cv = 
+  update_ship_index !cv 0;
+  let curr_ship = ship_at_index cv !current_ship_index in
+  let coord = get_coord_of_hit curr_ship in
+  let updated_ship = filter_coord curr_ship coord in
+  let updated_ship_lst = filter_ships !cv !current_ship_index updated_ship in
+  cv := updated_ship_lst
 
-let update_curr_ship_index () = 
-  if !(ship_at_index !current_ship_index) = [] then 
-  begin
-    let bound = (List.length !ship_lst) in
-    new_index bound;
-    !current_ship_index
-  end
-  else
-    !current_ship_index
-
-let rec update_ship_lst (ship_lst:('a * 'b) list ref list ref) new_ship ind num = 
-  let update = ref [] in
-  (match !ship_lst with 
+let rec print_lst lst = 
+  match lst with
     | [] -> ()
-    |  h::t -> if ind = num then
-                update := new_ship :: !update
-              else
-                update := !update @ t;
-                update_ship_lst {contents = t} new_ship ind (succ num));
-  ship_lst := !update
-              
+    | h::t -> print_tuple h; print_lst t
 
-(* bangships should be !ship_lst *)
-let rec ai_win_condition bangships = 
-  match bangships with
-    | [] -> true
-    | h::t -> if !h = [] then
-                ai_win_condition t 
-              else
-                false
-  
-(* Returns coordinate to fire at. arr is an array of coordinates *)
-let get_coord_of_hit reflst =
-  let rnd_ind = Random.int (List.length !reflst) in
-  List.nth !reflst rnd_ind
+let rec print_ship_lst lst_of_lst = 
+  match lst_of_lst with
+    | [] -> ()
+    | h::t -> print_lst h; print_ship_lst t
 
-(* let ai_fire m ship_lst = 
-  let curr_ship = ship_at_index (update_curr_ship_index ()) in
-  match determine_hard_fire () with
-    | true -> let (x, y) = (get_coord_of_hit curr_ship) in
-              remove_coord_from_ship curr_ship (x, y);
-              update_ship_lst
+(* [ai_fire m ship_lst] returns *)
+let ai_fire m cv empty_lst = 
+  match false with
+    | true ->
+              let curr_ship = ship_at_index cv !current_ship_index in
+              let (x, y) = (get_coord_of_hit curr_ship) in
+              print_string "\n";
+              print_string "Updated Ship List: ";
+              print_ship_lst !cv;
+              print_string "\n";
+              print_string "Fired at: ";
+              print_tuple (x, y);
+              print_string "\n";
               m.(x).(y) <- Hit;
               m
-    | false -> let (x, y) = get_empty_coord (get_all_empty_coords m) in
-              remove_empty (x, y) empty_lst;
+    | false ->
+              let (x, y) = get_empty_coord empty_lst in
+              (* print_string "\n";
+              print_string "Empty List: ";
+              print_lst !empty_lst;
+              print_string "\n"; *)
+              assert (not (List.mem (x, y) !empty_lst));
+              assert (List.length (!empty_lst) <> (List.length ((x, y)::!empty_lst)));
                m.(x).(y) <- Miss;
-               m *) *)
+               m

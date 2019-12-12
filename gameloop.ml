@@ -297,6 +297,11 @@ let handle_input win b =
   | Quit -> ignore(exit_display ()); b
   | _ -> b
 
+let ship_lst = ref []
+let empty_lst = ref []
+let empty_lst_made = ref false
+let ship_lst_made = ref false
+
 (* Blank for now *)
 let ai_fire opp_b = 
   turn_count := !turn_count + 1; 
