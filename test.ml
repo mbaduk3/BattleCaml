@@ -1,6 +1,27 @@
 open OUnit2
 open Gameboard
 
+(* ---------------------------- Test Plan ----------------------------------- *)
+
+(*
+  Our game consists of several files, each of which contains the logic for a 
+  different part of the system. As such, we tested each file differently. 
+
+  The gameboard contains the logic for the main game data structure. This 
+  structure is mutable, so testing the board required that we kept track of how 
+  the board was being modified in between tests, so that we would know what the 
+  expected results should be. As such, we developed most of the tests using 
+  a glass-box testing approach, so that we would be able to examine all of the 
+  different scenarios that might occur in the game. After writing these tests, 
+  we also tested by playing the game extensively, just to ensure the correctness
+  of the system. 
+
+  
+*)
+
+
+
+
 (* ------------------- Gameboard Tests ----------------------- *)
 
 let list_a = [1;2;3]
