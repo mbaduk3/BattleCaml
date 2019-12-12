@@ -17,6 +17,9 @@ type powerup = Sea_mine | Bomb | Double_bullet | Points | Repair_kit
 (** The entry options that a single spot on the board may be *)
 type entry = Hit | Miss | Unhit | Empty | Collected | Uncollected of powerup
 
+(** The ai mode options *)
+type mode = Easy | Medium | Hard
+
 (** The type representing the gameboard *)
 type t = entry array array
 
@@ -39,6 +42,22 @@ val init_matrix : unit -> entry array array
     Returns [acc] if [lst] is the empty list. *)
 val index : 'a list -> 'a -> int -> int
 
+(** [thd tup] returns the third element of [tup], which is represented by 
+(x, y, len, orientation), thus returning the value of len *)
+val thd : 'a * 'b * 'c * 'd -> 'c
+
+(** [create_vertical_lst tup acc num] transforms [tup] into a list of coordinate 
+    pairs that describe the position of each of the user's placed vertical 
+    ships.*)
+val create_vertical_lst : 'a * int * int * 'b -> ('a * int) list -> int -> 
+                          ('a * int) list
+
+(** [create_horizontal_lst tup acc num] transforms [tup] into a list of 
+   coordinate pairs that describe the position of each of the user's placed 
+   horizontal ships. *)
+val create_horizontal_lst : int * 'a * int * 'b -> (int * 'a) list -> int -> 
+                            (int * 'a) list
+
 (** [get_array_from i j] is a subset of [arr], indexed from [i] to 
    [j]-non-inclusive. *)
 val get_array_from : int -> int -> 'a array -> 'a array
@@ -48,6 +67,12 @@ val create_ship : int -> entry array
 
 (** The standard game ship suite *)
 val ships : (entry array * orientation) array
+
+(** [ship_coordinates arr_to_lst acc] returns a reference of [arr_to_lst] whose
+     elements are references to coordinate positions of the user's placed 
+     ships *)
+val ship_coordinates : (int * int * int * orientation) list -> 
+                       (int * int) list list -> (int * int) list list
 
 (* The standard game opponent ship suite *)
 val opp_ships : (entry array * orientation) array

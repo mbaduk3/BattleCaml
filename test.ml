@@ -162,13 +162,13 @@ let ai_functionality_tests = [
   make_filter_test "Filter Test 3" [(0, 0); (1, 0); (2, 0)] (3, 0) (ref [(0,0); (1, 0); (2, 0)]);
   make_cartesian_product_test "CP 1 Elem List" [(3, 3)] [3] [3];
   make_cartesian_product_test "CP 2 Elem List" [(0, 0); (0, 1); (1, 0); (1, 1)] [0; 1] [0; 1];
-  make_get_all_empty_coords_test "Empty Coords" empty_coords matrix_ex;
-  make_update_ship_lst_test "Ship List Iter 1" [[(0, 1);]; [(0, 2); (0, 4); 
-                          (0, 5)]; [(1, 1); (1, 2); (1, 3); (1, 4)]];
-  make_update_ship_lst_test "Ship List Iter 2" [[]; [(0, 2); (0, 4); 
+  (* make_get_all_empty_coords_test "Empty Coords" empty_coords matrix_ex; *)
+  (* make_update_ship_lst_test "Ship List Iter 1" [[(0, 1);]; [(0, 2); (0, 4); 
+                          (0, 5)]; [(1, 1); (1, 2); (1, 3); (1, 4)]]; *)
+  (* make_update_ship_lst_test "Ship List Iter 2" [[]; [(0, 2); (0, 4); 
                           (0, 5)]; [(1, 1); (1, 2); (1, 3); (1, 4)]];
   make_update_ship_lst_test "Ship List Iter 2" [[]; [(0, 4); (0, 5)]; 
-                                      [(1, 1); (1, 2); (1, 3); (1, 4)]]
+                                      [(1, 1); (1, 2); (1, 3); (1, 4)]] *)
             
 ]
 
