@@ -69,9 +69,11 @@ let rec ship_at_index ships ind =
 let get_coord_of_hit ship = 
   List.nth ship curr_elt
 
+(* [filter_coord lst coord]  returns a new list without a given coordinate. *)
 let filter_coord (lst : (int * int) list) (coord : int * int) = 
   List.filter (fun c -> if c = coord then false else true) lst
 
+(* [replace lst ind elt] replaces the value in [lst] at [ind] with [elt] *)
 let rec replace lst ind elt =
   match lst with
   | [] -> lst
@@ -80,6 +82,7 @@ let rec replace lst ind elt =
             else
               h::(replace t (ind - 1) elt)
 
+(* [filter_ships] calls replace in a more readable format *)
 let filter_ships ship_lst ship_ind new_ship =
   replace ship_lst ship_ind new_ship
 
@@ -93,7 +96,7 @@ let update_ship_lst ships =
   ships := updated_ship_lst;
   update_ship_index !ships 0
 
-(* [ai_fire m ship_lst] returns *)
+(* [ai_fire m ship_lst] is the main firing mechanism of the hard AI. *)
 let ai_fire m ships empty_lst = 
   match determine_hard_fire () with
     | true ->
