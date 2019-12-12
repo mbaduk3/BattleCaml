@@ -3,34 +3,51 @@ open Gameboard
 open Ai_hard
 open Ai_easy
 (* ---------------------------- TEST PLAN ----------------------------------
-  Testing for a game is rather difficult to do, so for testing, we decided to
-  essentially run a single player game of BattleCaml. This single player game
-  tests all of the functionality that is manually done by the player. This is done
+  Lots of our testing was done manually, as with a game it is rather
+  difficult to fully test backend functionality. However, we simulated some of 
+  the gameboard, AI functionality, and ship placing functionality
   using OUnit, and it ultimately proves part of system correctness because it
-  accurately simulates how one would fire in the game using the cursor. Of course,
-  BattleCaml has an AI aspect of it as well, which is also tested using OUnit.
+  accurately simulates how one would fire in the game using the cursor, 
+  how the AI knows where its ships are, and how to rotate ships. Since
+  a large portion of the AI runs on global variables, it was extremely hard to
+  test locally without running into testing bugs. Instead, we tested the base
+  functionality, such as getting the ship list correctly, making sure shuffling
+  worked, and testing the cartesian product of two lists.
 
-  I created two helper functions for testing the randomness functionality. If two
-  lists are the same, but in different order, then their difference should be an
-  empty list. 
+  A majority of our testing was done through glass box testing, as for the most 
+  part, the writer of a given function also tested it. However, for some of the
+  gameboard functionality, we had black box testing. This is because lots of
+  these functions were written in the early stages of our game and so rather than
+  undestanding what was happening in the actual implementation, we looked at the
+  documention written about them. In a sense, we assumed that these functions 
+  did what we thought they would do, and thus, we did black box testing. 
+
+  A big part of the AI functionality runs on randomness. As such, testing this
+  required helper functions that determined whether or not invariants of the AI
+  functions were still satisfied. This was done with the helper function 
+  difference. If two ists are the same, but in different order, then their 
+  difference should be an empty list. This function helpeed a lot with testing
+  AI functions.
+
+  At first, we had some issues translating from the backend side of the board 
+  to the front end display but the tests for Gameboard helped understand the 
+  difference between thedisplay and the backend board. Additionally, many key 
+  features of the AI functionality were tested. If these functions did not work
+  properly, then the invariants and algorithms behind the AI's would not be 
+  satisfied. Lots of our testing was also done visually, making sure that the 
+  backend board properly connected to the front end display. We as a team spent 
+  hours debugging visual display errors, which as previously mentioned involves 
+  lots of manual testing.
    ---------------------------END TEST PLAN -------------------------------*)
 
 (* ---------------------------- AI Tests ------------------------------------ *)
 
-(* [intersect l1 l2] returns a list of the shared elements between [l1] and [l2] *)
-let intersect l1 l2 =
-   List.rev ( List.fold_left (fun acc x -> if (List.exists (fun y -> y = x) l1) 
-    then x::acc else acc) [] l2)
 
 (* [diff l1 l2] returns a list whose elements are in [l1] but not [l2] *)
 let diff l1 l2 = List.filter (fun x -> not (List.mem x l2)) l1
 
 let ship_lst_test = ref [[(0,0); (0, 1);]; [(0, 2); (0, 4); 
                           (0, 5)]; [(1, 1); (1, 2); (1, 3); (1, 4)]]
-
-let matrix_ex = [|[|Empty; Empty; Empty; Empty; Empty; Empty|];
-                     [|Unhit; Unhit; Unhit; Unhit; Unhit; Unhit|];
-                     [|Empty; Empty; Empty; Empty; Unhit; Unhit|]|]
 
 let empty_coords = [(0, 0); (1, 0); (2, 0); (3, 0); (4, 0); (5, 0);
                     (0, 2); (1, 2); (2, 2); (3, 2)]
@@ -76,12 +93,6 @@ let make_thd_test
     name >:: fun _ ->
     assert_equal expected_output (thd input)
 
-let make_get_miss_coord_test
-  (name : string)
-   = name >:: fun _ ->
-    let difference = diff !empty_lst_copy !empty_lst_ex in
-    assert_equal 1 (List.length difference)
-
 let make_create_vertical_lst_test
   (name : string)
   (expected_output : ('a * int) list)
@@ -99,19 +110,6 @@ let make_create_horizontal_lst_test
   (input3 : int) : test = 
     name >:: fun _ ->
     assert_equal expected_output (create_horizontal_lst input1 input2 input3)
-
-let make_update_ship_lst_test
-  (name : string)
-  (expected_output : (int * int) list list) : test = 
-    name >:: fun _ -> (update_ship_lst ship_lst_test);
-    assert_equal expected_output !ship_lst_test
-
-let make_get_all_empty_coords_test
-  (name : string)
-  (expected_output : (int * int) list)
-  (input : Gameboard.entry array array) : test = 
-    name >:: fun _ ->
-    assert_equal expected_output (get_all_empty_coords input (ref []))
 
 let make_filter_test
   (name : string)
@@ -163,15 +161,7 @@ let ai_functionality_tests = [
   make_filter_test "Filter Test 2" [(0, 0); (2, 0)] (1,0) (ref [(0,0); (1, 0); (2, 0)]);
   make_filter_test "Filter Test 3" [(0, 0); (1, 0); (2, 0)] (3, 0) (ref [(0,0); (1, 0); (2, 0)]);
   make_cartesian_product_test "CP 1 Elem List" [(3, 3)] [3] [3];
-  make_cartesian_product_test "CP 2 Elem List" [(0, 0); (0, 1); (1, 0); (1, 1)] [0; 1] [0; 1];
-  (* make_get_all_empty_coords_test "Empty Coords" empty_coords matrix_ex; *)
-  (* make_update_ship_lst_test "Ship List Iter 1" [[(0, 1);]; [(0, 2); (0, 4); 
-                          (0, 5)]; [(1, 1); (1, 2); (1, 3); (1, 4)]]; *)
-  (* make_update_ship_lst_test "Ship List Iter 2" [[]; [(0, 2); (0, 4); 
-                          (0, 5)]; [(1, 1); (1, 2); (1, 3); (1, 4)]];
-  make_update_ship_lst_test "Ship List Iter 2" [[]; [(0, 4); (0, 5)]; 
-                                      [(1, 1); (1, 2); (1, 3); (1, 4)]] *)
-            
+  make_cartesian_product_test "CP 2 Elem List" [(0, 0); (0, 1); (1, 0); (1, 1)] [0; 1] [0; 1];         
 ]
 
 (* ------------------- Gameboard Tests ----------------------- *)
@@ -254,9 +244,9 @@ let make_fire_test
   (input_m: Gameboard.t)
   (expected: string) : test = 
   name >:: (fun _ -> 
-    format input_m;
+    (* format m;  Uncomment this to see that this worked. *)
     let res = fire input_c input_m in 
-    format input_m;
+    (* format m; Uncomment this to see that this worked. *)
     assert_equal expected (string_of_response res))
 
 
