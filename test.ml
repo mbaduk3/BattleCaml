@@ -257,7 +257,6 @@ let make_fire_test
     let res = fire input_c input_m in 
     assert_equal expected (string_of_response res))
 
-
 let gameboard_tests = [
   make_init_matrix_test "init_matrix ()";
   make_index_test "first index" list_a 1 0;
