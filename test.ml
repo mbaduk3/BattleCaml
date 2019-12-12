@@ -110,10 +110,6 @@ let gameboard_tests = [
 
 
 
-
-
-
-
 (* ---------------------- End Testing ----------------------- *)
 let suite = 
   "test suite for battleCaml" >::: List.flatten [

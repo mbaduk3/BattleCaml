@@ -185,7 +185,7 @@ let cur_blink_helper b win dt =
       ignore(wattron win Curses.WA.protect)
     end
 
-let render_board b win phase dt =
+let render_board b win (phase:int) (dt:float) =
   cur_x := 1;
   cur_y := 1;
   ignore (start_color ());
