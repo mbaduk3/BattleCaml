@@ -142,7 +142,57 @@ let make_shuffled_lst_len_eq_test
    name >:: fun _ ->
     assert_equal (List.length test) (List.length (shuffle input))
 
-(* =========================================================================== *)
+let ai_functionality_tests = [
+  make_thd_test "Test on String" "3" (1, 2, "3", 4);
+  make_thd_test "Test on Int" 3 (1, 2, 3, 4);
+  make_create_vertical_lst_test "1st Elem" fst_elem_vert vertical_lst.(0) [] 0;
+  make_create_vertical_lst_test "2nd Elem" snd_elem_vert vertical_lst.(1) [] 0;
+  make_create_vertical_lst_test "3rd Elem" thd_elem_vert vertical_lst.(2) [] 0;
+  make_create_vertical_lst_test "4th Elem" frth_elem_vert vertical_lst.(3) [] 0;
+  make_create_horizontal_lst_test "1st Elem" fst_elem_hoz horizontal_lst.(0) [] 0;
+  make_create_horizontal_lst_test "2nd Elem" snd_elem_hoz horizontal_lst.(1) [] 0;
+  make_create_horizontal_lst_test "3rd Elem" thd_elem_hoz horizontal_lst.(2) [] 0;
+  make_create_horizontal_lst_test "4th Elem" frth_elem_hoz horizontal_lst.(3) [] 0;
+  make_shuffled_lst_eq_test "Empty Lists" [] [];
+  make_shuffled_lst_eq_test "Non-Empty Lists" [1;2;3] [1;2;3];
+  make_shuffled_lst_len_eq_test "Empty Lists" [] [];
+  make_shuffled_lst_len_eq_test "Non-Empty Lists" [1;2;3] [1;2;3];
+  make_filter_test "Filter Test 1" [] (0,0) (ref [(0,0)]);
+  make_filter_test "Filter Test 2" [(0, 0); (2, 0)] (1,0) (ref [(0,0); (1, 0); (2, 0)]);
+  make_filter_test "Filter Test 3" [(0, 0); (1, 0); (2, 0)] (3, 0) (ref [(0,0); (1, 0); (2, 0)]);
+  make_cartesian_product_test "CP 1 Elem List" [(3, 3)] [3] [3];
+  make_cartesian_product_test "CP 2 Elem List" [(0, 0); (0, 1); (1, 0); (1, 1)] [0; 1] [0; 1];
+  make_get_all_empty_coords_test "Empty Coords" empty_coords matrix_ex;
+  make_update_ship_lst_test "Ship List Iter 1" [[(0, 1);]; [(0, 2); (0, 4); 
+                          (0, 5)]; [(1, 1); (1, 2); (1, 3); (1, 4)]];
+  make_update_ship_lst_test "Ship List Iter 2" [[]; [(0, 2); (0, 4); 
+                          (0, 5)]; [(1, 1); (1, 2); (1, 3); (1, 4)]];
+  make_update_ship_lst_test "Ship List Iter 2" [[]; [(0, 4); (0, 5)]; 
+                                      [(1, 1); (1, 2); (1, 3); (1, 4)]]
+            
+]
+
+(* ------------------- Gameboard Tests ----------------------- *)
+
+let list_a = [1;2;3]
+let array_a = Array.make 5 "a"
+let array_b = Array.copy array_a
+let () = array_b.(1) <- "b"; array_b.(2) <- "c"
+let array_c = Array.make 3 "a"
+let () = array_c.(1) <- "b"; array_c.(2) <- "c"
+let array_empty = Array.make 0 "a"
+let board_a = Array.make_matrix 10 10 Empty
+let board_b = Array.make_matrix 10 10 Empty
+let () = board_b.(2).(3) <- Miss
+let board_c = Array.make_matrix 10 10 Empty
+let () = board_c.(5).(5) <- Hit
+
+let reset_board_a () = 
+  for i = 0 to 9 do 
+    for j = 0 to 9 do 
+      board_a.(i).(j) <- Empty
+    done
+  done
 
 let make_init_matrix_test 
   (name: string) : test = 
@@ -179,13 +229,34 @@ let make_new_mod_test
     let res = new_mod input_n input_m in 
     assert_equal ~printer:(string_of_int) expected res)
 
-let list_a = [1;2;3]
-let array_a = Array.make 5 "a"
-let array_b = Array.copy array_a
-let () = array_b.(1) <- "b"; array_b.(2) <- "c"
-let array_c = Array.make 3 "a"
-let () = array_c.(1) <- "b"; array_c.(2) <- "c"
-let array_empty = Array.make 0 "a"
+let make_string_of_tup_test 
+  (name: string)
+  (input_tup: int*int)
+  (expected: string) : test = 
+  name >:: (fun _ -> 
+    let res = string_of_tuple input_tup in 
+    assert_equal expected res)
+
+let make_get_val_of_coord
+  (name: string)
+  (input_m: Gameboard.t)
+  (input_coord: int*int)
+  (expected: Gameboard.entry) : test = 
+  name >:: (fun _ -> 
+    let res = get_val_of_coord input_m input_coord in 
+    assert_equal ~printer:(string_of_entry) expected res)
+
+let make_fire_test 
+  (name: string)
+  (input_c: coord)
+  (input_m: Gameboard.t)
+  (expected: string) : test = 
+  name >:: (fun _ -> 
+    format input_m;
+    let res = fire input_c input_m in 
+    format input_m;
+    assert_equal expected (string_of_response res))
+
 
 let gameboard_tests = [
   make_init_matrix_test "init_matrix ()";
@@ -200,37 +271,15 @@ let gameboard_tests = [
   make_new_mod_test "regular mod" 5 3 2;
   make_new_mod_test "negative mod" (-3) 2 (-1);
   make_new_mod_test "mod by negative" 5 (-3) (2);
+  make_string_of_tup_test "tuple test" (5, 5) "(5, 5)";
+  make_string_of_tup_test "negative tup" (-2, 3) "(-2, 3)";
+  make_get_val_of_coord "empty val" board_a (2, 3) Empty;
+  make_fire_test "empty fire" (2, 3) board_a "no contact";
+  make_get_val_of_coord "hit val" board_c (5, 5) Hit;
+  make_fire_test "miss fire" (2, 3) board_b "already miss";
 ]
 
-let ai_functionality_tests = [
-  make_thd_test "Test on String" "3" (1, 2, "3", 4);
-  make_thd_test "Test on Int" 3 (1, 2, 3, 4);
-  make_create_vertical_lst_test "1st Elem" fst_elem_vert vertical_lst.(0) [] 0;
-  make_create_vertical_lst_test "2nd Elem" snd_elem_vert vertical_lst.(1) [] 0;
-  make_create_vertical_lst_test "3rd Elem" thd_elem_vert vertical_lst.(2) [] 0;
-  make_create_vertical_lst_test "4th Elem" frth_elem_vert vertical_lst.(3) [] 0;
-  make_create_horizontal_lst_test "1st Elem" fst_elem_hoz horizontal_lst.(0) [] 0;
-  make_create_horizontal_lst_test "2nd Elem" snd_elem_hoz horizontal_lst.(1) [] 0;
-  make_create_horizontal_lst_test "3rd Elem" thd_elem_hoz horizontal_lst.(2) [] 0;
-  make_create_horizontal_lst_test "4th Elem" frth_elem_hoz horizontal_lst.(3) [] 0;
-  make_shuffled_lst_eq_test "Empty Lists" [] [];
-  make_shuffled_lst_eq_test "Non-Empty Lists" [1;2;3] [1;2;3];
-  make_shuffled_lst_len_eq_test "Empty Lists" [] [];
-  make_shuffled_lst_len_eq_test "Non-Empty Lists" [1;2;3] [1;2;3];
-  make_filter_test "Filter Test 1" [] (0,0) (ref [(0,0)]);
-  make_filter_test "Filter Test 2" [(0, 0); (2, 0)] (1,0) (ref [(0,0); (1, 0); (2, 0)]);
-  make_filter_test "Filter Test 3" [(0, 0); (1, 0); (2, 0)] (3, 0) (ref [(0,0); (1, 0); (2, 0)]);
-  make_cartesian_product_test "CP 1 Elem List" [(3, 3)] [3] [3];
-  make_cartesian_product_test "CP 2 Elem List" [(0, 0); (0, 1); (1, 0); (1, 1)] [0; 1] [0; 1];
-  make_get_all_empty_coords_test "Empty Coords" empty_coords matrix_ex;
-  make_update_ship_lst_test "Ship List Iter 1" [[(0, 1);]; [(0, 2); (0, 4); 
-                          (0, 5)]; [(1, 1); (1, 2); (1, 3); (1, 4)]];
-  make_update_ship_lst_test "Ship List Iter 2" [[]; [(0, 2); (0, 4); 
-                          (0, 5)]; [(1, 1); (1, 2); (1, 3); (1, 4)]];
-  make_update_ship_lst_test "Ship List Iter 2" [[]; [(0, 4); (0, 5)]; 
-                                      [(1, 1); (1, 2); (1, 3); (1, 4)]]
-            
-]
+
 
 (* ---------------------- End Testing ----------------------- *)
 let suite = 
@@ -238,5 +287,4 @@ let suite =
     gameboard_tests;
     ai_functionality_tests
   ]
-
 let _ = run_test_tt_main suite
