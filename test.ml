@@ -86,6 +86,14 @@ let frth_elem_hoz = [(4, "not used"); (5, "not used"); (6, "not used"); (7, "not
 let example_opp_ships = [|(1, 1, 5, Vertical); (2, 2, 5, Horizontal); 
                             (3, 3, 1, Vertical); (4, 4, 7, Horizontal)|]
 
+let make_diff_test
+  (name : string)
+  (expected_output : 'a list)
+  (l1 : 'a list)
+  (l2 : 'a list) : test = 
+    name >:: fun _ ->
+    assert_equal expected_output (diff l1 l2)
+
 let make_thd_test
   (name : string)
   (expected_output : ('c))
@@ -164,6 +172,11 @@ let ai_functionality_tests = [
   make_cartesian_product_test "CP 1 Elem List" [(3, 3)] [3] [3];
   make_cartesian_product_test "CP 2 Elem List" [(0, 0); (0, 1); (1, 0); (1, 1)] [0; 1] [0; 1];
   make_cartesian_product_test "CP Empty List" [] [] [];
+  make_diff_test "Non Empty" [] [1;2;3] [1;2;3];
+  make_diff_test "L1 Empty" [] [] [1;2;3];
+  make_diff_test "L2 Empty" [1;2;3] [1;2;3] [];
+  make_diff_test "L1 > L2" [4] [1;2;3;4] [1;2;3];
+  make_diff_test "L2 > L1" [] [1;2;3] [1;2;3;4]
 ]
 
 (* ------------------- Gameboard Tests ----------------------- *)
