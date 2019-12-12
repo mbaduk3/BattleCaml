@@ -31,14 +31,10 @@ let get_array_from i j arr =
        else array_match i j t acc (succ num)) in
   Array.of_list (array_match i j lst [] 0)
 
-(* [thd tup] returns the third element of [tup], which is represented by 
-(x, y, len, orientation), thus returning the value of len *)
 let thd tup = 
   match tup with
     | (_, _, t, _) -> t
 
-(* [create_vertical_lst tup acc num] transforms [tup] into a list of coordinate pairs
-that describe the position of each of the user's placed vertical ships.*)
 let rec create_vertical_lst tup acc num = 
   match num with
     | num when num < (thd tup) -> 
