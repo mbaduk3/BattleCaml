@@ -1,8 +1,10 @@
 open OUnit2
 open Gameboard
+open Gameloop
 open Ai_hard
 open Ai_easy
 (* ---------------------------- TEST PLAN ----------------------------------
+
   Lots of our testing was done manually, as with a game it is rather
   difficult to fully test backend functionality. However, we simulated some of 
   the gameboard, AI functionality, and ship placing functionality
@@ -38,6 +40,34 @@ open Ai_easy
   backend board properly connected to the front end display. We as a team spent 
   hours debugging visual display errors, which as previously mentioned involves 
   lots of manual testing.
+  
+   Testing for a game is rather difficult to do, so for testing, we decided to
+   essentially run a single player game of BattleCaml. This single player game
+   tests all of the functionality that is manually done by the player. This is done
+   using OUnit, and it ultimately proves part of system correctness because it
+   accurately simulates how one would fire in the game using the cursor. Of course,
+   BattleCaml has an AI aspect of it as well, which is also tested using OUnit.
+
+   I created two helper functions for testing the randomness functionality. If two
+   lists are the same, but in different order, then their difference should be an
+   empty list. 
+   
+   (*
+  Our game consists of several files, each of which contains the logic for a 
+  different part of the system. As such, we tested each file differently. 
+
+  The gameboard contains the logic for the main game data structure. This 
+  structure is mutable, so testing the board required that we kept track of how 
+  the board was being modified in between tests, so that we would know what the 
+  expected results should be. As such, we developed most of the tests using 
+  a glass-box testing approach, so that we would be able to examine all of the 
+  different scenarios that might occur in the game. After writing these tests, 
+  we also tested by playing the game extensively, just to ensure the correctness
+  of the system. 
+
+  
+*)
+
    ---------------------------END TEST PLAN -------------------------------*)
 
 (* ---------------------------- AI Tests ------------------------------------ *)
@@ -46,19 +76,24 @@ open Ai_easy
 (* [diff l1 l2] returns a list whose elements are in [l1] but not [l2] *)
 let diff l1 l2 = List.filter (fun x -> not (List.mem x l2)) l1
 
+<<<<<<< HEAD
 let ship_lst_test = ref [[(0,0); (0, 1);]; [(0, 2); (0, 4)]]
+=======
+let ship_lst_test = ref [[(0,0); (0, 1);]; [(0, 2); (0, 4); 
+                                            (0, 5)]; [(1, 1); (1, 2); (1, 3); (1, 4)]]
+>>>>>>> 92730b749257cbc8ee57b51cd38e997203cc3da1
 
 let empty_coords = [(0, 0); (1, 0); (2, 0); (3, 0); (4, 0); (5, 0);
                     (0, 2); (1, 2); (2, 2); (3, 2)]
 
 let empty_lst_ex = ref [(0, 0); (1, 0); (2, 0); (3, 0); (4, 0); (5, 0);
-                    (0, 2); (1, 2); (1, 2); (1, 3)]
+                        (0, 2); (1, 2); (1, 2); (1, 3)]
 
 let empty_lst_copy = ref [(0, 0); (1, 0); (2, 0); (3, 0); (4, 0); (5, 0);
-                    (0, 2); (1, 2); (1, 2); (1, 3)]
+                          (0, 2); (1, 2); (1, 2); (1, 3)]
 
 let vertical_lst = [|("making", 1, 5, Vertical); ("sure", 2, 5, Vertical); 
-                            ("x coord", 3, 1, Vertical); ("not used", 4, 7, Vertical)|]
+                     ("x coord", 3, 1, Vertical); ("not used", 4, 7, Vertical)|]
 
 let fst_elem_vert = [("making", 1); ("making", 2); ("making", 3); ("making", 4); ("making", 5)]
 
@@ -67,10 +102,10 @@ let snd_elem_vert = [("sure", 2); ("sure", 3); ("sure", 4); ("sure", 5); ("sure"
 let thd_elem_vert = [("x coord", 3)]
 
 let frth_elem_vert = [("not used", 4); ("not used", 5); ("not used", 6); ("not used", 7);
-                     ("not used", 8); ("not used", 9); ("not used", 10)]
+                      ("not used", 8); ("not used", 9); ("not used", 10)]
 
 let horizontal_lst = [|(1, "making", 5, Horizontal); (2, "sure", 5, Horizontal); 
-                      (3, "y coord", 1, Horizontal); (4, "not used", 7, Horizontal)|]
+                       (3, "y coord", 1, Horizontal); (4, "not used", 7, Horizontal)|]
 
 let fst_elem_hoz = [(1, "making"); (2, "making"); (3, "making"); 
                     (4, "making"); (5, "making")]
@@ -80,10 +115,10 @@ let snd_elem_hoz = [(2, "sure"); (3, "sure"); (4, "sure"); (5, "sure"); (6, "sur
 let thd_elem_hoz = [(3, "y coord")]
 
 let frth_elem_hoz = [(4, "not used"); (5, "not used"); (6, "not used"); (7, "not used");
-                    (8, "not used"); (9, "not used"); (10, "not used")]
+                     (8, "not used"); (9, "not used"); (10, "not used")]
 
 let example_opp_ships = [|(1, 1, 5, Vertical); (2, 2, 5, Horizontal); 
-                            (3, 3, 1, Vertical); (4, 4, 7, Horizontal)|]
+                          (3, 3, 1, Vertical); (4, 4, 7, Horizontal)|]
 
 let make_diff_test
   (name : string)
@@ -103,60 +138,74 @@ let make_replace_tests
     assert_equal expected_output (replace lst ind elt)
 
 let make_thd_test
-  (name : string)
-  (expected_output : ('c))
-  (input : 'a * 'b * 'c * 'd) : test = 
-    name >:: fun _ ->
+    (name : string)
+    (expected_output : ('c))
+    (input : 'a * 'b * 'c * 'd) : test = 
+  name >:: fun _ ->
     assert_equal expected_output (thd input)
 
 let make_create_vertical_lst_test
-  (name : string)
-  (expected_output : ('a * int) list)
-  (input1 : 'a * int * int * 'b)
-  (input2 : ('a * int) list)
-  (input3 : int) : test = 
-    name >:: fun _ ->
+    (name : string)
+    (expected_output : ('a * int) list)
+    (input1 : 'a * int * int * 'b)
+    (input2 : ('a * int) list)
+    (input3 : int) : test = 
+  name >:: fun _ ->
     assert_equal expected_output (create_vertical_lst input1 input2 input3)
 
 let make_create_horizontal_lst_test
-  (name : string)
-  (expected_output : (int * 'a) list)
-  (input1 : int * 'a * int * 'b)
-  (input2 : (int * 'a) list)
-  (input3 : int) : test = 
-    name >:: fun _ ->
+    (name : string)
+    (expected_output : (int * 'a) list)
+    (input1 : int * 'a * int * 'b)
+    (input2 : (int * 'a) list)
+    (input3 : int) : test = 
+  name >:: fun _ ->
     assert_equal expected_output (create_horizontal_lst input1 input2 input3)
 
 let make_filter_test
-  (name : string)
-  (expected_output : 'a list)
-  (input1 : 'a)
-  (input2 : 'a list ref) : test =
-    name >:: fun _ ->
+    (name : string)
+    (expected_output : 'a list)
+    (input1 : 'a)
+    (input2 : 'a list ref) : test =
+  name >:: fun _ ->
     assert_equal expected_output (Ai_easy.filter input1 input2)
 
 let make_cartesian_product_test
-  (name : string)
-  (expected_output : ('a * 'b) list)
-  (input1 : 'a list)
-  (input2 : 'b list) : test = 
-    name >:: fun _ -> 
+    (name : string)
+    (expected_output : ('a * 'b) list)
+    (input1 : 'a list)
+    (input2 : 'b list) : test = 
+  name >:: fun _ -> 
     let cp = cartesian_product input1 input2 in
     assert_equal [] (diff cp expected_output)
 
 let make_shuffled_lst_eq_test
-  (name : string)
-  (test: 'a list)
-  (input : 'a list) : test = 
-   name >:: fun _ ->
+    (name : string)
+    (test: 'a list)
+    (input : 'a list) : test = 
+  name >:: fun _ ->
     assert_equal [] (diff (shuffle input) test)
 
 let make_shuffled_lst_len_eq_test
-  (name : string)
-  (test: 'a list)
-  (input : 'a list) : test = 
-   name >:: fun _ ->
+    (name : string)
+    (test: 'a list)
+    (input : 'a list) : test = 
+  name >:: fun _ ->
     assert_equal (List.length test) (List.length (shuffle input))
+
+(* let make_hor_to_ver_test
+    (name : string)
+    (ships : ('a * orientation) array)
+    (ship : int) : test =
+  handle_rotate ships ship;
+  name >:: fun _ -> assert_equal (snd ships.(ship)) Vertical
+
+let make_ver_to_hor_test
+    (name : string)
+    (ships : ('a * orientation) array)
+    (ship : int) : test = 
+  handle_rotate ships ship;
+  name >:: fun _ -> assert_equal (snd ships.(ship)) Horizontal *)
 
 let ai_functionality_tests = [
   make_thd_test "Test on String" "3" (1, 2, "3", 4);
@@ -186,12 +235,28 @@ let ai_functionality_tests = [
   make_diff_test "L1 Empty" [] [] [1;2;3];
   make_diff_test "L2 Empty" [1;2;3] [1;2;3] [];
   make_diff_test "L1 > L2" [4] [1;2;3;4] [1;2;3];
+<<<<<<< HEAD
   make_diff_test "L2 > L1" [] [1;2;3] [1;2;3;4];
   make_replace_tests "Replace 1" [1; 2; 4] [1;2;3] 2 4;
   make_replace_tests "Replace length 1" [0] [1] 0 0;
   make_replace_tests "Replace with same" [1;2;3] [1; 2; 3] 1 2;
   make_replace_tests "tuples" [(1, 2); (3, 4)] [(0, 0); (3, 4)] 0 (1, 2)
+=======
+  make_diff_test "L2 > L1" [] [1;2;3] [1;2;3;4]
+  (* make_hor_to_ver_test "Horizontal to vertical rotation" (Array.make 1 (0, Horizontal)) 0;
+  make_ver_to_hor_test "Vertical to horizontal rotation" (Array.make 1 (0, Vertical)) 0; *)
+  (* make_get_all_empty_coords_test "Empty Coords" empty_coords matrix_ex; *)
+  (* make_update_ship_lst_test "Ship List Iter 1" [[(0, 1);]; [(0, 2); (0, 4); 
+                          (0, 5)]; [(1, 1); (1, 2); (1, 3); (1, 4)]]; *)
+  (* make_update_ship_lst_test "Ship List Iter 2" [[]; [(0, 2); (0, 4); 
+                          (0, 5)]; [(1, 1); (1, 2); (1, 3); (1, 4)]];
+     make_update_ship_lst_test "Ship List Iter 2" [[]; [(0, 4); (0, 5)]; 
+                                      [(1, 1); (1, 2); (1, 3); (1, 4)]] *)
+>>>>>>> 92730b749257cbc8ee57b51cd38e997203cc3da1
 ]
+
+
+
 
 (* ------------------- Gameboard Tests ----------------------- *)
 
@@ -216,66 +281,64 @@ let reset_board_a () =
   done
 
 let make_init_matrix_test 
-  (name: string) : test = 
+    (name: string) : test = 
   name >:: (fun _ -> 
-    let m = init_matrix () in 
-    assert_equal 10 (Array.length m);
-    assert_equal 10 (Array.length m.(0)))
+      let m = init_matrix () in 
+      assert_equal 10 (Array.length m);
+      assert_equal 10 (Array.length m.(0)))
 
 let make_index_test 
-  (name: string)
-  (input_lst : 'a list)
-  (input_elem : 'a)
-  (expected_index: int) : test = 
+    (name: string)
+    (input_lst : 'a list)
+    (input_elem : 'a)
+    (expected_index: int) : test = 
   name >:: (fun _ -> 
-    let i = index input_lst input_elem 0 in 
-    assert_equal expected_index i)
+      let i = index input_lst input_elem 0 in 
+      assert_equal expected_index i)
 
 let make_get_array_from_test
-  (name: string)
-  (input_i: int)
-  (input_j: int)
-  (input_arr: 'a array)
-  (expected_arr: 'a array) : test = 
+    (name: string)
+    (input_i: int)
+    (input_j: int)
+    (input_arr: 'a array)
+    (expected_arr: 'a array) : test = 
   name >:: (fun _ -> 
-    let m = get_array_from input_i input_j input_arr in 
-    assert_equal expected_arr m)
+      let m = get_array_from input_i input_j input_arr in 
+      assert_equal expected_arr m)
 
 let make_new_mod_test 
-  (name: string)
-  (input_n: int)
-  (input_m: int)
-  (expected: int) : test = 
+    (name: string)
+    (input_n: int)
+    (input_m: int)
+    (expected: int) : test = 
   name >:: (fun _ -> 
-    let res = new_mod input_n input_m in 
-    assert_equal ~printer:(string_of_int) expected res)
+      let res = new_mod input_n input_m in 
+      assert_equal ~printer:(string_of_int) expected res)
 
 let make_string_of_tup_test 
-  (name: string)
-  (input_tup: int*int)
-  (expected: string) : test = 
+    (name: string)
+    (input_tup: int*int)
+    (expected: string) : test = 
   name >:: (fun _ -> 
-    let res = string_of_tuple input_tup in 
-    assert_equal expected res)
+      let res = string_of_tuple input_tup in 
+      assert_equal expected res)
 
 let make_get_val_of_coord
-  (name: string)
-  (input_m: Gameboard.t)
-  (input_coord: int*int)
-  (expected: Gameboard.entry) : test = 
+    (name: string)
+    (input_m: Gameboard.t)
+    (input_coord: int*int)
+    (expected: Gameboard.entry) : test = 
   name >:: (fun _ -> 
-    let res = get_val_of_coord input_m input_coord in 
-    assert_equal ~printer:(string_of_entry) expected res)
+      let res = get_val_of_coord input_m input_coord in 
+      assert_equal ~printer:(string_of_entry) expected res)
 
 let make_fire_test 
-  (name: string)
-  (input_c: coord)
-  (input_m: Gameboard.t)
-  (expected: string) : test = 
+    (name: string)
+    (input_c: coord)
+    (input_m: Gameboard.t)
+    (expected: string) : test = 
   name >:: (fun _ -> 
-    (* format m;  Uncomment this to see that this worked. *)
     let res = fire input_c input_m in 
-    (* format m; Uncomment this to see that this worked. *)
     assert_equal expected (string_of_response res))
 
 let gameboard_tests = [

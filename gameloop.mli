@@ -7,3 +7,6 @@
     and reset the framerate timer every call to draw.
  *)
 
+val handle_rotate : ('a * Gameboard.orientation) array -> int -> unit
+
+val main : unit -> 'a
