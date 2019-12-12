@@ -34,6 +34,10 @@ let rules = "
 type phase = Placement | Play | Menu | Win | Lose
 let in_phase = ref Menu
 
+(* Reference to the counter for the number of ships placed in placement phase *)
+let ship_i = ref 0
+let surrender = ref false
+
 (* let modes = [Gameboard.Easy; Gameboard.Medium; Gameboard.Hard]
 let mode_set = ref false
 
@@ -50,10 +54,6 @@ let set_mode () =
     end
   else
     !curr_mode *)
-
-(* Reference to the counter for the number of ships placed in placement phase *)
-let ship_i = ref 0
-let surrender = ref false
 
 (* ship_coordinates is an array of tuples. Each tuple holds the x,y of the 
    upper-left coordinate of the ship, the length, and orientation *)
