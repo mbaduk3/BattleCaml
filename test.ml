@@ -144,7 +144,7 @@ let make_shuffled_lst_len_eq_test
   name >:: fun _ ->
     assert_equal (List.length test) (List.length (shuffle input))
 
-let make_hor_to_ver_test
+(* let make_hor_to_ver_test
     (name : string)
     (ships : ('a * orientation) array)
     (ship : int) : test =
@@ -156,7 +156,7 @@ let make_ver_to_hor_test
     (ships : ('a * orientation) array)
     (ship : int) : test = 
   handle_rotate ships ship;
-  name >:: fun _ -> assert_equal (snd ships.(ship)) Horizontal
+  name >:: fun _ -> assert_equal (snd ships.(ship)) Horizontal *)
 
 let ai_functionality_tests = [
   make_thd_test "Test on String" "3" (1, 2, "3", 4);
@@ -178,8 +178,8 @@ let ai_functionality_tests = [
   make_filter_test "Filter Test 3" [(0, 0); (1, 0); (2, 0)] (3, 0) (ref [(0,0); (1, 0); (2, 0)]);
   make_cartesian_product_test "CP 1 Elem List" [(3, 3)] [3] [3];
   make_cartesian_product_test "CP 2 Elem List" [(0, 0); (0, 1); (1, 0); (1, 1)] [0; 1] [0; 1];
-  make_hor_to_ver_test "Horizontal to vertical rotation" (Array.make 1 (0, Horizontal)) 0;
-  make_ver_to_hor_test "Vertical to horizontal rotation" (Array.make 1 (0, Vertical)) 0;
+  (* make_hor_to_ver_test "Horizontal to vertical rotation" (Array.make 1 (0, Horizontal)) 0;
+  make_ver_to_hor_test "Vertical to horizontal rotation" (Array.make 1 (0, Vertical)) 0; *)
   (* make_get_all_empty_coords_test "Empty Coords" empty_coords matrix_ex; *)
   (* make_update_ship_lst_test "Ship List Iter 1" [[(0, 1);]; [(0, 2); (0, 4); 
                           (0, 5)]; [(1, 1); (1, 2); (1, 3); (1, 4)]]; *)

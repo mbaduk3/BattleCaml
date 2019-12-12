@@ -3,7 +3,7 @@ OBJECTS=$(MODULES:=.cmo)
 MLS=$(MODULES:=.ml)
 MLIS=$(MODULES:=.mli)
 TEST=test.byte
-MAIN=gameloop
+MAIN=main
 OCB_FLAGS = -tag bin_annot
 OCB_PKG = -package curses,ANSITerminal,ounit
 OCAMLBUILD=ocamlbuild -use-ocamlfind $(OCB_FLAGS)

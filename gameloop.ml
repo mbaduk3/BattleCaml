@@ -444,6 +444,5 @@ let main () =
   change_phase Menu;
   play_game demo_board demo_board dt
 
-let () = main ()
 
 
