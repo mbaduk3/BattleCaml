@@ -34,10 +34,15 @@ let rules = "
 type phase = Placement | Play | Menu
 let in_phase = ref Menu
 
-(* Reference to the counter for the number of ships placed in placement phase *)
+(** [ship_i] is a counter for ships to be placed in the [Placement] phase. *)
 let ship_i = ref 0
 
+(** [ship_coordinates] is an array representing the coordinates, length, and
+    orientation of ships placed on your board. *)
 let ship_coordinates = Array.make 5 (0, 0, 0, Horizontal)
+
+(** [opp_coordinates] is an array representing the coordinates, length, and
+    orientation of ships placed on your opponent's board. *)
 let opp_coordinates = Array.make 5 (0, 0, 0, Horizontal)
 let starttime = Sys.time ()
 
@@ -68,18 +73,15 @@ let handle_fire win b =
     | Contact m -> incr_turn ();incr_score (); m
     | _ -> failwith "Unimplemented"
 
-(* let place_ship matrix ship_i x y = 
-   let ship_len = Array.length (List.nth ships ship_i) in 
-   for i = 0 to (ship_len - 1) do 
-    matrix.(y - 1).(x + i - 1) <- (List.nth ships ship_i).(i)
-   done *)
-
-(* Invert the orientation of the ship at index [ship] in the ships matrix *)
+(** [handle_rotate ships ship] rotates ship at index [ship] of array [ships]. *)
 let handle_rotate ships ship =
   if snd ships.(ship) = Horizontal
   then ships.(ship) <- (fst (ships.(ship)), Vertical)
   else ships.(ship) <- (fst (ships.(ship)), Horizontal)
 
+(** [check_placement coords ships ship x y orientation] checks if ship at index
+    [ship] of array [ships] can be placed at coordinates [x], [y] without
+    overlapping with other ships in array [coords]. *)
 let check_placement coords ships ship x y orientation =
   let ship_len = Array.length (fst (ships.(ship))) in
   for i = 0 to ship - 1 do
@@ -111,6 +113,48 @@ let check_placement coords ships ship x y orientation =
         end
   done
 
+(** [check_rotation matrix ships ship x y orientation ship_len] places ship at
+    index [ship] in array [ships] with length [ship_len] starting at coordinate
+    [x], [y] with orientation [orientation]. *)
+let check_rotation matrix ships ship x y orientation ship_len = 
+  for i = 0 to (ship_len - 1) do
+    if orientation = Horizontal then
+      begin
+        if ships = opp_ships
+        then
+          begin 
+            check_placement opp_coordinates opp_ships ship x y orientation;
+            matrix.(y - 1).(x + i - 1) <- (fst (opp_ships.(ship))).(i);
+            opp_coordinates.(ship) <- (x, y, ship_len, orientation);
+          end
+        else
+          begin
+            check_placement ship_coordinates ships ship x y orientation;
+            matrix.(y - 1).(x + i - 1) <- (fst (ships.(ship))).(i);
+            ship_coordinates.(ship) <- (x, y, ship_len, orientation);
+          end
+      end
+    else
+      begin
+        if ships = opp_ships
+        then
+          begin
+            check_placement opp_coordinates opp_ships ship x y orientation;
+            matrix.(y + i - 1).(x - 1) <- (fst (opp_ships.(ship))).(i);
+            opp_coordinates.(ship) <- (x, y, ship_len, orientation)
+          end
+        else
+          begin
+            check_placement ship_coordinates ships ship x y orientation;
+            matrix.(y + i - 1).(x - 1) <- (fst (ships.(ship))).(i);
+            ship_coordinates.(ship) <- (x, y, ship_len, orientation)
+          end
+      end
+  done
+
+(** [place_ship matrix ships ship x y rot] rotates ship at index [ship] in 
+    array [ships] if [rot] is true, otherwise places ship at index [ship] in
+    array [ships] at coordinate [x], [y] on matrix [matrix]. *)
 let place_ship matrix ships ship x y rot = 
   if rot then handle_rotate ships ship
   else
@@ -119,42 +163,7 @@ let place_ship matrix ships ship x y rot =
     if (orientation = Horizontal && x + ship_len > 11)
     || (orientation = Vertical && y + ship_len > 11)
     then raise (Invalid_argument "ship is out of bounds")
-    else begin
-      for i = 0 to (ship_len - 1) do
-        if orientation = Horizontal then
-          begin
-            if ships = opp_ships
-            then
-              begin 
-                check_placement opp_coordinates opp_ships ship x y orientation;
-                matrix.(y - 1).(x + i - 1) <- (fst (opp_ships.(ship))).(i);
-                opp_coordinates.(ship) <- (x, y, ship_len, orientation);
-              end
-            else
-              begin
-                check_placement ship_coordinates ships ship x y orientation;
-                matrix.(y - 1).(x + i - 1) <- (fst (ships.(ship))).(i);
-                ship_coordinates.(ship) <- (x, y, ship_len, orientation);
-              end
-          end
-        else
-          begin
-            if ships = opp_ships
-            then
-              begin
-                check_placement opp_coordinates opp_ships ship x y orientation;
-                matrix.(y + i - 1).(x - 1) <- (fst (opp_ships.(ship))).(i);
-                opp_coordinates.(ship) <- (x, y, ship_len, orientation)
-              end
-            else
-              begin
-                check_placement ship_coordinates ships ship x y orientation;
-                matrix.(y + i - 1).(x - 1) <- (fst (ships.(ship))).(i);
-                ship_coordinates.(ship) <- (x, y, ship_len, orientation)
-              end
-          end
-      done
-    end
+    else check_rotation matrix ships ship x y orientation ship_len
 
 (* Returns a crosshair matrix from a given ship matrix. 
    This is used for placement-phase highlighting *)
@@ -165,8 +174,10 @@ let cross_mat_of_ship ship orient =
   else 
     Array.make_matrix 1 len 1
 
-(* Returns the orientation equivalent of a boolean *)
-let orient_of_rot = function
+(** [orient_of_rot b] is [Horizontal] if [b] is false and [Vertical] if [b] is
+    true. *)
+let orient_of_rot b =
+  match b with
   | false -> Horizontal 
   | true -> Vertical
 
@@ -178,22 +189,24 @@ let update_cur_ship () =
     let s,orient = Array.get ships (!ship_i) in
     crosshair_mat := cross_mat_of_ship s (orient)
 
-(* Changes the internal phase of the game *)
+(** [change_phase p] changes phase to phase [p] *)
 let change_phase p =
   update_cur_ship ();
   match p with 
-    | Placement -> 
-        let s,orient = Array.get ships (!ship_i) in 
-        crosshair_mat := cross_mat_of_ship s orient;
-        placement_init ();
-        in_phase := Placement
-    | Play -> 
-        play_init ();
-        in_phase := Play
-    | Menu -> 
-        menu_init ();
-        in_phase := Menu
-        
+  | Placement -> 
+    let s,orient = Array.get ships (!ship_i) in 
+    crosshair_mat := cross_mat_of_ship s orient;
+    placement_init ();
+    in_phase := Placement
+  | Play -> 
+    play_init ();
+    in_phase := Play
+  | Menu -> 
+    menu_init ();
+    in_phase := Menu
+
+(** [handle_placement win b rot] places up to 5 ships on board [b] and changes
+    phase to [Play] when 5 ships are placed. *)
 let handle_placement win b rot =
   try
     if (!ship_i < 5) then 
@@ -201,16 +214,13 @@ let handle_placement win b rot =
         update_cur_ship ();
         place_ship b ships !ship_i (!crosshair_x) !crosshair_y rot;
         if rot then ()
-        else 
-          (* update_cur_ship rot; *)
-        if not rot then incr ship_i;
-        if (!ship_i = 5) then change_phase Play else ()
+        else if not rot then incr ship_i;
+        if (!ship_i = 5) then change_phase Play
+        else ()
       end
     else update_cur_ship ()
-  (* TODO: include useful error message: "You have placed all the ships!" *)
   with 
   | Invalid_argument e -> ()
-(*TODO: print error message [e]*)
 
 let handle_input_menu win b = 
   match get_key win with 
@@ -246,7 +256,7 @@ let ai_fire opp_b =
   turn_count := !turn_count + 1; 
   Ai_medium.ai_fire opp_b
 
-(* Generates a random board with placed ships for the ai *)
+(** [ai_placement ()] is a board with ships randomly placed on it. *)
 let ai_placement () =
   let count = ref 0 in
   let m = Array.make_matrix 10 10 Empty in
@@ -265,11 +275,15 @@ let ai_placement () =
   done;
   m
 
+(** [check_overlap matrix x y p] checks if powerup [p] can be placed at
+    coordinate [x], [y] on matrix [matrix]. *)
 let check_overlap matrix x y p =
   if matrix.(y - 1).(x - 1) = Empty
   then matrix.(y - 1).(x - 1) <- Uncollected p
   else raise (Invalid_argument "powerup cannot be placed here")
 
+(** [powerup_placement powerups] is a board with powerups in [powerups]
+    randomly placed on it. *)
 let powerup_placement powerups = 
   let m = ai_placement () in
   let rec place powerups = 
