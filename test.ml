@@ -254,9 +254,7 @@ let make_fire_test
   (input_m: Gameboard.t)
   (expected: string) : test = 
   name >:: (fun _ -> 
-    format input_m;
     let res = fire input_c input_m in 
-    format input_m;
     assert_equal expected (string_of_response res))
 
 
