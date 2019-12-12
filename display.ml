@@ -349,6 +349,7 @@ let update_maxs () =
   max_x := x;
   max_y := y
 
+(** Refreshes all the windows, to ready for the next frame *)
 let refresh_all () = 
   ignore(Curses.wrefresh !b_win);
   ignore(Curses.wrefresh !score_win);
