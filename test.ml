@@ -145,6 +145,7 @@ let make_shuffled_lst_len_eq_test
 let ai_functionality_tests = [
   make_thd_test "Test on String" "3" (1, 2, "3", 4);
   make_thd_test "Test on Int" 3 (1, 2, 3, 4);
+  make_thd_test "Test on Bool" true (1, 2, true, 4);
   make_create_vertical_lst_test "1st Elem" fst_elem_vert vertical_lst.(0) [] 0;
   make_create_vertical_lst_test "2nd Elem" snd_elem_vert vertical_lst.(1) [] 0;
   make_create_vertical_lst_test "3rd Elem" thd_elem_vert vertical_lst.(2) [] 0;
@@ -161,7 +162,8 @@ let ai_functionality_tests = [
   make_filter_test "Filter Test 2" [(0, 0); (2, 0)] (1,0) (ref [(0,0); (1, 0); (2, 0)]);
   make_filter_test "Filter Test 3" [(0, 0); (1, 0); (2, 0)] (3, 0) (ref [(0,0); (1, 0); (2, 0)]);
   make_cartesian_product_test "CP 1 Elem List" [(3, 3)] [3] [3];
-  make_cartesian_product_test "CP 2 Elem List" [(0, 0); (0, 1); (1, 0); (1, 1)] [0; 1] [0; 1];         
+  make_cartesian_product_test "CP 2 Elem List" [(0, 0); (0, 1); (1, 0); (1, 1)] [0; 1] [0; 1];
+  make_cartesian_product_test "CP Empty List" [] [] [];
 ]
 
 (* ------------------- Gameboard Tests ----------------------- *)
