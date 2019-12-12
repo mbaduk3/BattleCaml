@@ -38,6 +38,25 @@ let in_phase = ref Menu
 let ship_i = ref 0
 let surrender = ref false
 
+(* [modes] is a list of the possible modes *)
+let modes = [Gameboard.Easy; Gameboard.Medium; Gameboard.Hard]
+let mode_set = ref false
+let curr_mode = ref Medium
+
+(* [get_rnd_elt bound] is an integer between 0 (inclusive) and bound (exclusive) *)
+let get_rnd_elt bound = Random.int bound
+
+(* [set_mode ()] chooses the mode for the given play randomly *)
+let set_mode () = 
+  if !mode_set = false then
+    begin
+      mode_set := true;
+      curr_mode := List.nth modes (get_rnd_elt 3);
+      !curr_mode
+    end
+  else
+    !curr_mode
+
 (* ship_coordinates is an array of tuples. Each tuple holds the x,y of the 
    upper-left coordinate of the ship, the length, and orientation *)
 let ship_coordinates = Array.make 5 (0, 0, 0, Horizontal)
@@ -81,12 +100,6 @@ let handle_fire win b =
     | Already_miss m -> m 
     | Contact m -> incr_turn ();incr_score (); m
     | _ -> failwith "Unimplemented"
-
-(* let place_ship matrix ship_i x y = 
-   let ship_len = Array.length (List.nth ships ship_i) in 
-   for i = 0 to (ship_len - 1) do 
-    matrix.(y - 1).(x + i - 1) <- (List.nth ships ship_i).(i)
-   done *)
 
 (* Invert the orientation of the ship at index [ship] in the ships matrix *)
 let handle_rotate ships ship =
@@ -297,10 +310,38 @@ let handle_input win b =
   | Quit -> ignore(exit_display ()); b
   | _ -> b
 
+let ship_lst = ref []
+let empty_lst = ref []
+let empty_lst_made = ref false
+let ship_lst_made = ref false
+
+let init_ship_lst () =
+  if !ship_lst_made = false then
+    begin
+    ship_lst_made := true;
+    ship_lst := Gameboard.ship_coordinates (Array.to_list ship_coordinates) [];
+    ship_lst
+    end
+  else
+    ship_lst
+
+let init_empty_lst m = 
+  if !empty_lst_made = false then
+    begin
+    empty_lst_made := true;
+    empty_lst := Ai_hard.get_all_empty_coords m empty_lst;
+    empty_lst
+    end
+  else
+    empty_lst
+
 (* Blank for now *)
 let ai_fire opp_b = 
-  turn_count := !turn_count + 1; 
-  Ai_medium.ai_fire opp_b
+  turn_count := !turn_count + 1;
+  match set_mode () with
+    | Hard -> Ai_hard.ai_fire opp_b (init_ship_lst()) (init_empty_lst opp_b)
+    | Medium -> Ai_medium.ai_fire opp_b
+    | Easy -> Ai_easy.ai_fire opp_b
 
 (* Generates a random board with placed ships for the ai *)
 let ai_placement () =
@@ -359,7 +400,7 @@ let rec play_game b opp_b t =
         play_game b opp_b' t
     end
   | Play ->
-    begin
+      begin
       if (!turn_count mod 2 = 0) then
         let opp_b' = handle_input !Display.b_win opp_b in
         if (check_win opp_b') then 
@@ -378,7 +419,6 @@ let rec play_game b opp_b t =
       ignore(handle_input_menu !scr b);
       play_game (init_matrix ()) (powerup_placement easy_mode_powerups) t
     end
-
 
 let main () = 
   let dt = Sys.time () -. starttime in

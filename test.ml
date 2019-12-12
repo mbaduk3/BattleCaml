@@ -1,5 +1,176 @@
 open OUnit2
 open Gameboard
+open Ai_hard
+open Ai_easy
+(* ---------------------------- TEST PLAN ----------------------------------
+  Testing for a game is rather difficult to do, so for testing, we decided to
+  essentially run a single player game of BattleCaml. This single player game
+  tests all of the functionality that is manually done by the player. This is done
+  using OUnit, and it ultimately proves part of system correctness because it
+  accurately simulates how one would fire in the game using the cursor. Of course,
+  BattleCaml has an AI aspect of it as well, which is also tested using OUnit.
+
+  I created two helper functions for testing the randomness functionality. If two
+  lists are the same, but in different order, then their difference should be an
+  empty list. 
+   ---------------------------END TEST PLAN -------------------------------*)
+
+(* [intersect l1 l2] returns a list of the shared elements between [l1] and [l2] *)
+let intersect l1 l2 =
+   List.rev ( List.fold_left (fun acc x -> if (List.exists (fun y -> y = x) l1) 
+    then x::acc else acc) [] l2)
+
+(* [diff l1 l2] returns a list whose elements are in [l1] but not [l2] *)
+let diff l1 l2 = List.filter (fun x -> not (List.mem x l2)) l1
+
+let ship_lst_test = ref [[(0,0); (0, 1);]; [(0, 2); (0, 4); 
+                          (0, 5)]; [(1, 1); (1, 2); (1, 3); (1, 4)]]
+
+let matrix_ex = [|[|Empty; Empty; Empty; Empty; Empty; Empty|];
+                     [|Unhit; Unhit; Unhit; Unhit; Unhit; Unhit|];
+                     [|Empty; Empty; Empty; Empty; Unhit; Unhit|]|]
+
+let empty_coords = [(0, 0); (1, 0); (2, 0); (3, 0); (4, 0); (5, 0);
+                    (0, 2); (1, 2); (2, 2); (3, 2)]
+
+let empty_lst_ex = ref [(0, 0); (1, 0); (2, 0); (3, 0); (4, 0); (5, 0);
+                    (0, 2); (1, 2); (1, 2); (1, 3)]
+
+let empty_lst_copy = ref [(0, 0); (1, 0); (2, 0); (3, 0); (4, 0); (5, 0);
+                    (0, 2); (1, 2); (1, 2); (1, 3)]
+
+let vertical_lst = [|("making", 1, 5, Vertical); ("sure", 2, 5, Vertical); 
+                            ("x coord", 3, 1, Vertical); ("not used", 4, 7, Vertical)|]
+
+let fst_elem_vert = [("making", 1); ("making", 2); ("making", 3); ("making", 4); ("making", 5)]
+
+let snd_elem_vert = [("sure", 2); ("sure", 3); ("sure", 4); ("sure", 5); ("sure", 6)]
+
+let thd_elem_vert = [("x coord", 3)]
+
+let frth_elem_vert = [("not used", 4); ("not used", 5); ("not used", 6); ("not used", 7);
+                     ("not used", 8); ("not used", 9); ("not used", 10)]
+
+let horizontal_lst = [|(1, "making", 5, Horizontal); (2, "sure", 5, Horizontal); 
+                      (3, "y coord", 1, Horizontal); (4, "not used", 7, Horizontal)|]
+
+let fst_elem_hoz = [(1, "making"); (2, "making"); (3, "making"); 
+                    (4, "making"); (5, "making")]
+
+let snd_elem_hoz = [(2, "sure"); (3, "sure"); (4, "sure"); (5, "sure"); (6, "sure")]
+
+let thd_elem_hoz = [(3, "y coord")]
+
+let frth_elem_hoz = [(4, "not used"); (5, "not used"); (6, "not used"); (7, "not used");
+                    (8, "not used"); (9, "not used"); (10, "not used")]
+
+let example_opp_ships = [|(1, 1, 5, Vertical); (2, 2, 5, Horizontal); 
+                            (3, 3, 1, Vertical); (4, 4, 7, Horizontal)|]
+
+let make_thd_test
+  (name : string)
+  (expected_output : ('c))
+  (input : 'a * 'b * 'c * 'd) : test = 
+    name >:: fun _ ->
+    assert_equal expected_output (thd input)
+
+let make_get_miss_coord_test
+  (name : string)
+   = name >:: fun _ ->
+    let difference = diff !empty_lst_copy !empty_lst_ex in
+    assert_equal 1 (List.length difference)
+
+let make_create_vertical_lst_test
+  (name : string)
+  (expected_output : ('a * int) list)
+  (input1 : 'a * int * int * 'b)
+  (input2 : ('a * int) list)
+  (input3 : int) : test = 
+    name >:: fun _ ->
+    assert_equal expected_output (create_vertical_lst input1 input2 input3)
+
+let make_create_horizontal_lst_test
+  (name : string)
+  (expected_output : (int * 'a) list)
+  (input1 : int * 'a * int * 'b)
+  (input2 : (int * 'a) list)
+  (input3 : int) : test = 
+    name >:: fun _ ->
+    assert_equal expected_output (create_horizontal_lst input1 input2 input3)
+
+let make_update_ship_lst_test
+  (name : string)
+  (expected_output : (int * int) list list) : test = 
+    name >:: fun _ -> (update_ship_lst ship_lst_test);
+    assert_equal expected_output !ship_lst_test
+
+let make_get_all_empty_coords_test
+  (name : string)
+  (expected_output : (int * int) list)
+  (input : Gameboard.entry array array) : test = 
+    name >:: fun _ ->
+    assert_equal expected_output (get_all_empty_coords input (ref []))
+
+let make_filter_test
+  (name : string)
+  (expected_output : 'a list)
+  (input1 : 'a)
+  (input2 : 'a list ref) : test =
+    name >:: fun _ ->
+    assert_equal expected_output (Ai_easy.filter input1 input2)
+
+let make_cartesian_product_test
+  (name : string)
+  (expected_output : ('a * 'b) list)
+  (input1 : 'a list)
+  (input2 : 'b list) : test = 
+    name >:: fun _ -> 
+    let cp = cartesian_product input1 input2 in
+    assert_equal [] (diff cp expected_output)
+
+let make_shuffled_lst_eq_test
+  (name : string)
+  (test: 'a list)
+  (input : 'a list) : test = 
+   name >:: fun _ ->
+    assert_equal [] (diff (shuffle input) test)
+
+let make_shuffled_lst_len_eq_test
+  (name : string)
+  (test: 'a list)
+  (input : 'a list) : test = 
+   name >:: fun _ ->
+    assert_equal (List.length test) (List.length (shuffle input))
+
+let ai_functionality_tests = [
+  make_thd_test "Test on String" "3" (1, 2, "3", 4);
+  make_thd_test "Test on Int" 3 (1, 2, 3, 4);
+  make_create_vertical_lst_test "1st Elem" fst_elem_vert vertical_lst.(0) [] 0;
+  make_create_vertical_lst_test "2nd Elem" snd_elem_vert vertical_lst.(1) [] 0;
+  make_create_vertical_lst_test "3rd Elem" thd_elem_vert vertical_lst.(2) [] 0;
+  make_create_vertical_lst_test "4th Elem" frth_elem_vert vertical_lst.(3) [] 0;
+  make_create_horizontal_lst_test "1st Elem" fst_elem_hoz horizontal_lst.(0) [] 0;
+  make_create_horizontal_lst_test "2nd Elem" snd_elem_hoz horizontal_lst.(1) [] 0;
+  make_create_horizontal_lst_test "3rd Elem" thd_elem_hoz horizontal_lst.(2) [] 0;
+  make_create_horizontal_lst_test "4th Elem" frth_elem_hoz horizontal_lst.(3) [] 0;
+  make_shuffled_lst_eq_test "Empty Lists" [] [];
+  make_shuffled_lst_eq_test "Non-Empty Lists" [1;2;3] [1;2;3];
+  make_shuffled_lst_len_eq_test "Empty Lists" [] [];
+  make_shuffled_lst_len_eq_test "Non-Empty Lists" [1;2;3] [1;2;3];
+  make_filter_test "Filter Test 1" [] (0,0) (ref [(0,0)]);
+  make_filter_test "Filter Test 2" [(0, 0); (2, 0)] (1,0) (ref [(0,0); (1, 0); (2, 0)]);
+  make_filter_test "Filter Test 3" [(0, 0); (1, 0); (2, 0)] (3, 0) (ref [(0,0); (1, 0); (2, 0)]);
+  make_cartesian_product_test "CP 1 Elem List" [(3, 3)] [3] [3];
+  make_cartesian_product_test "CP 2 Elem List" [(0, 0); (0, 1); (1, 0); (1, 1)] [0; 1] [0; 1];
+  make_get_all_empty_coords_test "Empty Coords" empty_coords matrix_ex;
+  make_update_ship_lst_test "Ship List Iter 1" [[(0, 1);]; [(0, 2); (0, 4); 
+                          (0, 5)]; [(1, 1); (1, 2); (1, 3); (1, 4)]];
+  make_update_ship_lst_test "Ship List Iter 2" [[]; [(0, 2); (0, 4); 
+                          (0, 5)]; [(1, 1); (1, 2); (1, 3); (1, 4)]];
+  make_update_ship_lst_test "Ship List Iter 2" [[]; [(0, 4); (0, 5)]; 
+                                      [(1, 1); (1, 2); (1, 3); (1, 4)]]
+            
+]
 
 (* ------------------- Gameboard Tests ----------------------- *)
 
@@ -114,6 +285,6 @@ let gameboard_tests = [
 let suite = 
   "test suite for battleCaml" >::: List.flatten [
     gameboard_tests;
+    ai_functionality_tests
   ]
-
 let _ = run_test_tt_main suite
