@@ -1,6 +1,9 @@
 (**
     This module stores all of the ascii art used in various screens of the game.
     All of the art is stored as strings.
+
+    Text graphics were taken from: http://patorjk.com/
+    Camel graphics were taken from: https://www.asciiart.eu/animals/camels
  *)
 
 (** The title menu 'battlecaml' text *)

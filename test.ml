@@ -15,6 +15,8 @@ open Ai_easy
   empty list. 
    ---------------------------END TEST PLAN -------------------------------*)
 
+(* ---------------------------- AI Tests ------------------------------------ *)
+
 (* [intersect l1 l2] returns a list of the shared elements between [l1] and [l2] *)
 let intersect l1 l2 =
    List.rev ( List.fold_left (fun acc x -> if (List.exists (fun y -> y = x) l1) 
