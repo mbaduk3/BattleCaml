@@ -1,6 +1,7 @@
+open Curses
+open Command
 open Gameboard
 open Display
-open Command
 open Ai_hard
 open Ai_easy
 open Ai_medium
@@ -42,6 +43,8 @@ let surrender = ref false
 let modes = [Gameboard.Easy; Gameboard.Medium; Gameboard.Hard]
 let mode_set = ref false
 let curr_mode = ref Medium
+
+let launch_cur = ref false
 
 (* [get_rnd_elt bound] is an integer between 0 (inclusive) and bound (exclusive) *)
 let get_rnd_elt bound = Random.int bound
@@ -442,6 +445,7 @@ let main () =
   let dt = Sys.time () -. starttime in
   print_string "Welcome!";
   change_phase Menu;
+  launch_cur := true;
   play_game demo_board demo_board dt
 
 
