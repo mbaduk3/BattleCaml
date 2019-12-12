@@ -319,10 +319,30 @@ let empty_lst = ref []
 let empty_lst_made = ref false
 let ship_lst_made = ref false
 
+let init_ship_lst () =
+  if !ship_lst_made = false then
+    begin
+    ship_lst_made := true;
+    ship_lst := ship_coordinates (Array.to_list ship_coordinates) [];
+    ship_lst
+    end
+  else
+    ship_lst
+
+let init_empty_lst m = 
+  if !empty_lst_made = false then
+    begin
+    empty_lst_made := true;
+    empty_lst := Ai_hard.get_all_empty_coords m empty_lst;
+    empty_lst
+    end
+  else
+    empty_lst
+
 (* Blank for now *)
 let ai_fire opp_b = 
   turn_count := !turn_count + 1; 
-  Ai_medium.ai_fire opp_b
+  Ai_hard.ai_fire opp_b ship_lst (init_empty_lst opp_b)
 
 (* Generates a random board with placed ships for the ai *)
 let ai_placement () =
