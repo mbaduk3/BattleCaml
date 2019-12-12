@@ -21,6 +21,8 @@ let rec index lst elem acc =
   | [] -> acc
   | h::t -> if h = elem then acc else index t elem (succ acc)
 
+(** [get_array_from i j] is a copy of [arr], but indexed from [i] to 
+    [j]-non-inclusive. *)
 let get_array_from i j arr = 
   let lst = Array.to_list arr in 
   let rec array_match i j lst acc num = 
@@ -60,27 +62,65 @@ let rec ship_coordinates arr_to_lst acc =
                 else
                   (ship_coordinates t ((create_horizontal_lst h [] 0)::acc))
 
-(* Creates a new "ship" Board of Unhit elements of length [len]. *)
+(** [create_ship len] is an array of [Unhit] elements with length [len]. *)
 let create_ship len = Array.make len Unhit
 
+(** [ships] is an array of ships with default length 0 and default orientation
+    [Horizontal]. *)
 let ships = Array.make 5 (Array.make 0 Unhit, Horizontal)
+
+(** [caml_5] sets index 0 of array [ships] to a ship of length 5 oriented
+    horizontally. *)
 let caml_5 = ships.(0) <- (create_ship 5, Horizontal)
+
+(** [caml_4] sets index 1 of array [ships] to a ship of length 4 oriented
+    horizontally. *)
 let caml_4 = ships.(1) <- (create_ship 4, Horizontal)
+
+(** [caml_3] sets index 2 of array [ships] to a ship of length 3 oriented
+    horizontally. *)
 let caml_3 = ships.(2) <- (create_ship 3, Horizontal)
+
+(** [caml_3'] sets index 3 of array [ships] to a ship of length 3 oriented
+    horizontally. *)
 let caml_3' = ships.(3) <- (create_ship 3, Horizontal)
+
+(** [caml_2] sets index 4 of array [ships] to a ship of length 2 oriented
+    horizontally. *)
 let caml_2 = ships.(4) <- (create_ship 2, Horizontal)
 
+(** [opp_ships] is an array of ships with default length 0 and default
+    orientation [Horizontal]. *)
 let opp_ships = Array.make 5 (Array.make 0 Unhit, Horizontal)
+
+(** [opp_5] sets index 0 of array [opp_ships] to a ship of length 5 oriented
+    horizontally. *)
 let opp_5 = opp_ships.(0) <- (create_ship 5, Horizontal)
+
+(** [opp_4] sets index 1 of array [opp_ships] to a ship of length 4 oriented
+    horizontally. *)
 let opp_4 = opp_ships.(1) <- (create_ship 4, Horizontal)
+
+(** [opp_3] sets index 2 of array [opp_ships] to a ship of length 3 oriented
+    horizontally. *)
 let opp_3 = opp_ships.(2) <- (create_ship 3, Horizontal)
+
+(** [opp_3'] sets index 3 of array [opp_ships] to a ship of length 3 oriented
+    horizontally. *)
 let opp_3' = opp_ships.(3) <- (create_ship 3, Horizontal)
+
+(** [opp_2] sets index 4 of array [opp_ships] to a ship of length 2 oriented
+    horizontally. *)
 let opp_2 = opp_ships.(4) <- (create_ship 2, Horizontal)
 
+(** [hard_mode_powerups] is a list of powerups used in hard mode. *)
 let hard_mode_powerups = Sea_mine :: Bomb :: Double_bullet
                          :: Points :: Repair_kit :: []
+
+(** [easy_mode_powerups] is a list of powerups used in easy mode. *)
 let easy_mode_powerups = hard_mode_powerups @ hard_mode_powerups
 
+(* [string_of_entry e] is the character representation of entry [e]. *)
 let string_of_entry e = 
   match e with 
   | Hit -> "H"
@@ -108,71 +148,116 @@ let transpose m =
     of matrix [m] *)
 let get_val_of_coord (m:t) (c:coord) = m.(fst c).(snd c)
 
+(** [check_explosion x y m] sets coordinate [x], [y] in matrix [m] to [Hit] if
+    it is [Unhit] and [Miss] otherwise. *)
 let check_explosion x y m =
   if m.(x).(y) = Unhit then m.(x).(y) <- Hit
   else m.(x).(y) <- Miss
 
+(** [handle_top_left c m] handles explosion at the top left coordinate of
+    matrix [m]. *)
+let handle_top_left c m = 
+  check_explosion (fst c) (snd c + 1) m;
+  check_explosion (fst c + 1) (snd c) m;
+  check_explosion (fst c + 1) (snd c + 1) m
+
+(** [handle_bottom_left c m] handles explosion at the bottom left coordinate of
+    matrix [m]. *)
+let handle_bottom_left c m =
+  check_explosion (fst c) (snd c - 1) m;
+  check_explosion (fst c + 1) (snd c - 1) m;
+  check_explosion (fst c + 1) (snd c) m
+
+(** [handle_top_right c m] handles explosion at the top right coordinate of
+    matrix [m]. *)
+let handle_top_right c m =
+  check_explosion (fst c - 1) (snd c) m;
+  check_explosion (fst c - 1) (snd c + 1) m;
+  check_explosion (fst c) (snd c + 1) m
+
+(** [handle_bottom_right c m] handles explosion at the bottom right coordinate
+    of matrix [m]. *)
+let handle_bottom_right c m =
+  check_explosion (fst c - 1) (snd c - 1) m;
+  check_explosion (fst c - 1) (snd c) m;
+  check_explosion (fst c) (snd c - 1) m
+
+(** [handle_left c m] handles explosion on the left side of matrix [m]. *)
+let handle_left c m =
+  check_explosion (fst c) (snd c - 1) m;
+  check_explosion (fst c) (snd c + 1) m;
+  check_explosion (fst c + 1) (snd c - 1) m;
+  check_explosion (fst c + 1) (snd c) m;
+  check_explosion (fst c + 1) (snd c + 1) m
+
+(** [handle_top c m] handles explosion on the top side of matrix [m]. *)
+let handle_top c m =
+  check_explosion (fst c - 1) (snd c) m;
+  check_explosion (fst c + 1) (snd c) m;
+  check_explosion (fst c - 1) (snd c + 1) m;
+  check_explosion (fst c) (snd c + 1) m;
+  check_explosion (fst c + 1) (snd c + 1) m
+
+(** [handle_right c m] handles explosion on the right side of matrix [m]. *)
+let handle_right c m =
+  check_explosion (fst c - 1) (snd c - 1) m;
+  check_explosion (fst c - 1) (snd c) m;
+  check_explosion (fst c - 1) (snd c + 1) m;
+  check_explosion (fst c) (snd c - 1) m;
+  check_explosion (fst c) (snd c + 1) m
+
+(** [handle_bottom c m] handles explosion on the bottom side of matrix [m]. *)
+let handle_bottom c m =
+  check_explosion (fst c - 1) (snd c - 1) m;
+  check_explosion (fst c - 1) (snd c) m;
+  check_explosion (fst c) (snd c - 1) m;
+  check_explosion (fst c + 1) (snd c - 1) m;
+  check_explosion (fst c + 1) (snd c) m
+
+(** [handle_explosion c m] handles explosion at coord [c] in matrix [m]. *)
+let handle_explosion c m = 
+  check_explosion (fst c - 1) (snd c - 1) m;
+  check_explosion (fst c - 1) (snd c) m;
+  check_explosion (fst c - 1) (snd c + 1) m;
+  check_explosion (fst c) (snd c - 1) m;
+  check_explosion (fst c) (snd c + 1) m;
+  check_explosion (fst c + 1) (snd c - 1) m;
+  check_explosion (fst c + 1) (snd c) m;
+  check_explosion (fst c + 1) (snd c + 1) m
+
+(** [handle_powerup c m p] handles powerup [p] at coord [c] in matrix [m]. *)
 let handle_powerup c m p = 
   if p = Sea_mine 
   then if fst c = 0 && snd c = 0 then begin
-      check_explosion (fst c) (snd c + 1) m;
-      check_explosion (fst c + 1) (snd c) m;
-      check_explosion (fst c + 1) (snd c + 1) m;
+      handle_top_left c m
     end
     else if fst c = 0 && snd c = 9 then begin
-      check_explosion (fst c) (snd c - 1) m;
-      check_explosion (fst c + 1) (snd c - 1) m;
-      check_explosion (fst c + 1) (snd c) m;
+      handle_bottom_left c m
     end
     else if fst c = 9 && snd c = 0 then begin
-      check_explosion (fst c - 1) (snd c) m;
-      check_explosion (fst c - 1) (snd c + 1) m;
-      check_explosion (fst c) (snd c + 1) m;
+      handle_top_right c m
     end
     else if fst c = 9 && snd c = 9 then begin
-      check_explosion (fst c - 1) (snd c - 1) m;
-      check_explosion (fst c - 1) (snd c) m;
-      check_explosion (fst c) (snd c + 1) m;
+      handle_bottom_right c m
     end
     else if fst c = 0 then begin
-      check_explosion (fst c) (snd c - 1) m;
-      check_explosion (fst c) (snd c + 1) m;
-      check_explosion (fst c + 1) (snd c - 1) m;
-      check_explosion (fst c + 1) (snd c) m;
-      check_explosion (fst c + 1) (snd c + 1) m;
+      handle_left c m
     end
     else if snd c = 0 then begin
-      check_explosion (fst c - 1) (snd c) m;
-      check_explosion (fst c + 1) (snd c) m;
-      check_explosion (fst c - 1) (snd c + 1) m;
-      check_explosion (fst c) (snd c + 1) m;
-      check_explosion (fst c + 1) (snd c + 1) m;
+      handle_top c m
     end
     else if fst c = 9 then begin
-      check_explosion (fst c - 1) (snd c - 1) m;
-      check_explosion (fst c - 1) (snd c) m;
-      check_explosion (fst c - 1) (snd c + 1) m;
-      check_explosion (fst c) (snd c - 1) m;
-      check_explosion (fst c) (snd c + 1) m;
+      handle_right c m
     end
     else if snd c = 9 then begin
-      check_explosion (fst c - 1) (snd c - 1) m;
-      check_explosion (fst c - 1) (snd c) m;
-      check_explosion (fst c) (snd c - 1) m;
-      check_explosion (fst c + 1) (snd c - 1) m;
-      check_explosion (fst c + 1) (snd c) m;
+      handle_bottom c m
     end
     else begin
-      check_explosion (fst c - 1) (snd c - 1) m;
-      check_explosion (fst c - 1) (snd c) m;
-      check_explosion (fst c - 1) (snd c + 1) m;
-      check_explosion (fst c) (snd c - 1) m;
-      check_explosion (fst c) (snd c + 1) m;
-      check_explosion (fst c + 1) (snd c - 1) m;
-      check_explosion (fst c + 1) (snd c) m;
-      check_explosion (fst c + 1) (snd c + 1) m;
+      handle_explosion c m
     end
 
+(** [fire c m] changes the board [m] based on the entry value at coord [c].
+    Returns a response containing the new board. *)
 let fire (c:coord) m = 
   match get_val_of_coord m c with
   | Empty -> m.(fst c).(snd c) <- Miss; No_contact m
