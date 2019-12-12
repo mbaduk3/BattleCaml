@@ -29,8 +29,8 @@ let rec index lst elem acc =
   | [] -> acc
   | h::t -> if h = elem then acc else index t elem (succ acc)
 
-(** [get_array_from i j] is a copy of [arr], but indexed from [i] to 
-    [j]-non-inclusive. *)
+(* [get_array_from i j arr] returns a new array from i to j (exclusive).
+    Essentially, its python code equivalent would be arr[i:j]. *)
 let get_array_from i j arr = 
   let lst = Array.to_list arr in 
   let rec array_match i j lst acc num = 
