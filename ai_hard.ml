@@ -47,7 +47,8 @@ let current_ship_index = ref 0
 
 let curr_elt = 0
 
-(* [update_ship_index]  *)
+(* [update_ship_index] updates the index to the next element if the current
+   element is empty  *)
 let rec update_ship_index lst_of_lst num = 
   let first_non_empty_found = ref false in
   match lst_of_lst with

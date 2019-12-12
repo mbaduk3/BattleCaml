@@ -75,12 +75,7 @@ open Ai_easy
 (* [diff l1 l2] returns a list whose elements are in [l1] but not [l2] *)
 let diff l1 l2 = List.filter (fun x -> not (List.mem x l2)) l1
 
-<<<<<<< HEAD
 let ship_lst_test = ref [[(0,0); (0, 1);]; [(0, 2); (0, 4)]]
-=======
-let ship_lst_test = ref [[(0,0); (0, 1);]; [(0, 2); (0, 4); 
-                                            (0, 5)]; [(1, 1); (1, 2); (1, 3); (1, 4)]]
->>>>>>> 92730b749257cbc8ee57b51cd38e997203cc3da1
 
 let empty_coords = [(0, 0); (1, 0); (2, 0); (3, 0); (4, 0); (5, 0);
                     (0, 2); (1, 2); (2, 2); (3, 2)]
@@ -234,24 +229,11 @@ let ai_functionality_tests = [
   make_diff_test "L1 Empty" [] [] [1;2;3];
   make_diff_test "L2 Empty" [1;2;3] [1;2;3] [];
   make_diff_test "L1 > L2" [4] [1;2;3;4] [1;2;3];
-<<<<<<< HEAD
   make_diff_test "L2 > L1" [] [1;2;3] [1;2;3;4];
   make_replace_tests "Replace 1" [1; 2; 4] [1;2;3] 2 4;
   make_replace_tests "Replace length 1" [0] [1] 0 0;
   make_replace_tests "Replace with same" [1;2;3] [1; 2; 3] 1 2;
   make_replace_tests "tuples" [(1, 2); (3, 4)] [(0, 0); (3, 4)] 0 (1, 2)
-=======
-  make_diff_test "L2 > L1" [] [1;2;3] [1;2;3;4]
-  (* make_hor_to_ver_test "Horizontal to vertical rotation" (Array.make 1 (0, Horizontal)) 0;
-  make_ver_to_hor_test "Vertical to horizontal rotation" (Array.make 1 (0, Vertical)) 0; *)
-  (* make_get_all_empty_coords_test "Empty Coords" empty_coords matrix_ex; *)
-  (* make_update_ship_lst_test "Ship List Iter 1" [[(0, 1);]; [(0, 2); (0, 4); 
-                          (0, 5)]; [(1, 1); (1, 2); (1, 3); (1, 4)]]; *)
-  (* make_update_ship_lst_test "Ship List Iter 2" [[]; [(0, 2); (0, 4); 
-                          (0, 5)]; [(1, 1); (1, 2); (1, 3); (1, 4)]];
-     make_update_ship_lst_test "Ship List Iter 2" [[]; [(0, 4); (0, 5)]; 
-                                      [(1, 1); (1, 2); (1, 3); (1, 4)]] *)
->>>>>>> 92730b749257cbc8ee57b51cd38e997203cc3da1
 ]
 
 
