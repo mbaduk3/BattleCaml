@@ -1,6 +1,5 @@
 open OUnit2
 open Gameboard
-open Gameloop
 open Ai_hard
 open Ai_easy
 (* ---------------------------- TEST PLAN ----------------------------------

@@ -406,7 +406,12 @@ let powerup_placement powerups =
 (* The main recursive game loop *)
 let rec play_game b opp_b t = 
   let dt = Sys.time () -. t in
-  let ntime = render b opp_b (int_of_phase !in_phase) !turn_count !score  !err_msg dt in
+  
+  let ntime = 
+    if (!launch_cur) then 
+      render b opp_b (int_of_phase !in_phase) !turn_count !score  !err_msg dt 
+    else 0.0 
+    in
   match !in_phase with 
   | Placement -> 
     begin
