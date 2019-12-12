@@ -34,6 +34,23 @@ let rules = "
 type phase = Placement | Play | Menu | Win | Lose
 let in_phase = ref Menu
 
+(* let modes = [Gameboard.Easy; Gameboard.Medium; Gameboard.Hard]
+let mode_set = ref false
+
+let curr_mode = ref Medium
+
+let get_rnd_elt bound = Random.int bound
+
+let set_mode () = 
+  if !mode_set = false then
+    begin
+      mode_set := true;
+      curr_mode := List.nth modes (get_rnd_elt 3);
+      !curr_mode
+    end
+  else
+    !curr_mode *)
+
 (* Reference to the counter for the number of ships placed in placement phase *)
 let ship_i = ref 0
 let surrender = ref false
