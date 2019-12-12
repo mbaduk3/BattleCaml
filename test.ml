@@ -9,12 +9,12 @@ open Ai_easy
   difficult to fully test backend functionality. However, we simulated some of 
   the gameboard, AI functionality, and ship placing functionality
   using OUnit, and it ultimately proves part of system correctness because it
-  accurately simulates how one would fire in the game using the cursor, 
-  how the AI knows where its ships are, and how to rotate ships. Since
-  a large portion of the AI runs on global variables, it was extremely hard to
-  test locally without running into testing bugs. Instead, we tested the base
-  functionality, such as getting the ship list correctly, making sure shuffling
-  worked, and testing the cartesian product of two lists.
+  accurately simulates how one would fire in the game using the cursor and
+  how the AI knows where its ships are. Since a large portion of the AI runs 
+  on global variables, it was extremely hard to test locally without running 
+  into testing bugs. Instead, we tested the base functionality, such as getting
+  the ship list correctly, making sure shuffling worked, and testing the 
+  cartesian product of two lists.
 
   A majority of our testing was done through glass box testing, as for the most 
   part, the writer of a given function also tested it. However, for some of the
@@ -76,8 +76,12 @@ open Ai_easy
 (* [diff l1 l2] returns a list whose elements are in [l1] but not [l2] *)
 let diff l1 l2 = List.filter (fun x -> not (List.mem x l2)) l1
 
+<<<<<<< HEAD
+let ship_lst_test = ref [[(0,0); (0, 1);]; [(0, 2); (0, 4)]]
+=======
 let ship_lst_test = ref [[(0,0); (0, 1);]; [(0, 2); (0, 4); 
                                             (0, 5)]; [(1, 1); (1, 2); (1, 3); (1, 4)]]
+>>>>>>> 92730b749257cbc8ee57b51cd38e997203cc3da1
 
 let empty_coords = [(0, 0); (1, 0); (2, 0); (3, 0); (4, 0); (5, 0);
                     (0, 2); (1, 2); (2, 2); (3, 2)]
@@ -123,6 +127,15 @@ let make_diff_test
   (l2 : 'a list) : test = 
     name >:: fun _ ->
     assert_equal expected_output (diff l1 l2)
+
+let make_replace_tests
+  (name : string)
+  (expected_output : 'a list)
+  (lst: 'a list)
+  (ind : int)
+  (elt : 'a) = 
+    name >:: fun _ ->
+    assert_equal expected_output (replace lst ind elt)
 
 let make_thd_test
     (name : string)
@@ -198,6 +211,7 @@ let ai_functionality_tests = [
   make_thd_test "Test on String" "3" (1, 2, "3", 4);
   make_thd_test "Test on Int" 3 (1, 2, 3, 4);
   make_thd_test "Test on Bool" true (1, 2, true, 4);
+  make_thd_test "Test on ref" (ref 3) (1, 2, ref 3, 4);
   make_create_vertical_lst_test "1st Elem" fst_elem_vert vertical_lst.(0) [] 0;
   make_create_vertical_lst_test "2nd Elem" snd_elem_vert vertical_lst.(1) [] 0;
   make_create_vertical_lst_test "3rd Elem" thd_elem_vert vertical_lst.(2) [] 0;
@@ -213,6 +227,7 @@ let ai_functionality_tests = [
   make_filter_test "Filter Test 1" [] (0,0) (ref [(0,0)]);
   make_filter_test "Filter Test 2" [(0, 0); (2, 0)] (1,0) (ref [(0,0); (1, 0); (2, 0)]);
   make_filter_test "Filter Test 3" [(0, 0); (1, 0); (2, 0)] (3, 0) (ref [(0,0); (1, 0); (2, 0)]);
+  make_filter_test "Filter Test 4" [(0, 0); (1, 0)] (3, 0) (ref [(0,0); (1, 0); (3, 0)]);
   make_cartesian_product_test "CP 1 Elem List" [(3, 3)] [3] [3];
   make_cartesian_product_test "CP 2 Elem List" [(0, 0); (0, 1); (1, 0); (1, 1)] [0; 1] [0; 1];
   make_cartesian_product_test "CP Empty List" [] [] [];
@@ -220,6 +235,13 @@ let ai_functionality_tests = [
   make_diff_test "L1 Empty" [] [] [1;2;3];
   make_diff_test "L2 Empty" [1;2;3] [1;2;3] [];
   make_diff_test "L1 > L2" [4] [1;2;3;4] [1;2;3];
+<<<<<<< HEAD
+  make_diff_test "L2 > L1" [] [1;2;3] [1;2;3;4];
+  make_replace_tests "Replace 1" [1; 2; 4] [1;2;3] 2 4;
+  make_replace_tests "Replace length 1" [0] [1] 0 0;
+  make_replace_tests "Replace with same" [1;2;3] [1; 2; 3] 1 2;
+  make_replace_tests "tuples" [(1, 2); (3, 4)] [(0, 0); (3, 4)] 0 (1, 2)
+=======
   make_diff_test "L2 > L1" [] [1;2;3] [1;2;3;4]
   (* make_hor_to_ver_test "Horizontal to vertical rotation" (Array.make 1 (0, Horizontal)) 0;
   make_ver_to_hor_test "Vertical to horizontal rotation" (Array.make 1 (0, Vertical)) 0; *)
@@ -230,6 +252,7 @@ let ai_functionality_tests = [
                           (0, 5)]; [(1, 1); (1, 2); (1, 3); (1, 4)]];
      make_update_ship_lst_test "Ship List Iter 2" [[]; [(0, 4); (0, 5)]; 
                                       [(1, 1); (1, 2); (1, 3); (1, 4)]] *)
+>>>>>>> 92730b749257cbc8ee57b51cd38e997203cc3da1
 ]
 
 
@@ -338,8 +361,6 @@ let gameboard_tests = [
   make_get_val_of_coord "hit val" board_c (5, 5) Hit;
   make_fire_test "miss fire" (2, 3) board_b "already miss";
 ]
-
-
 
 (* ---------------------- End Testing ----------------------- *)
 let suite = 
