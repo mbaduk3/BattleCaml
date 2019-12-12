@@ -13,15 +13,12 @@ type ship = t
 type response = Contact of t | No_contact of t | 
                 Already_hit of t | Already_miss of t | Misc
 
+type mode = Easy | Medium | Hard
+
 type orientation = Vertical | Horizontal
 
 exception Malformed 
 exception Out_of_bounds
-
-(* Note to self: 
-   For Array.make_matrix x y elt, we would read it as x rows of length y whose
-   elements are elt.
-   Array.(i).(j) gives the val at row i, column j *)
 
 (* A 10x10 board of Empty values *)
 let init_matrix () = Array.make_matrix 10 10 Empty
@@ -44,7 +41,38 @@ let get_array_from i j arr =
        else array_match i j t acc (succ num)) in
   Array.of_list (array_match i j lst [] 0)
 
-(** A ship will always have 1 or n elements in the matrix. 1 if horizontal. n if vertical*)
+(* [thd tup] returns the third element of [tup], which is represented by 
+(x, y, len, orientation), thus returning the value of len *)
+let thd tup = 
+  match tup with
+    | (_, _, t, _) -> t
+
+(* [create_vertical_lst tup acc num] transforms [tup] into a list of coordinate pairs
+that describe the position of each of the user's placed vertical ships.*)
+let rec create_vertical_lst tup acc num = 
+  match num with
+    | num when num < (thd tup) -> 
+      let (x, y, _, _) = tup in (create_vertical_lst tup ((x, y+num)::acc) (succ num))
+    | _ -> (List.rev acc)
+
+(* [create_horizontal_lst tup acc num] transforms [tup] into a list of coordinate pairs
+that describe the position of each of the user's placed horizontal ships.*)
+let rec create_horizontal_lst tup acc num = 
+  match num with
+    | num when num < (thd tup) -> 
+      let (x, y, _, _) = tup in create_horizontal_lst tup ((x+num, y)::acc) (succ num)
+    | _ -> (List.rev acc)
+
+(* [ship_coordinates arr_to_lst acc] returns a reference of [arr_to_lst] whose elements
+are references to coordinate positions of the user's placed ships *)
+let rec ship_coordinates arr_to_lst acc = 
+    match arr_to_lst with
+      | [] -> List.rev acc
+      | h::t -> let (_, _, _, orientation) = h in
+                if orientation = Vertical then
+                  (ship_coordinates t ((create_vertical_lst h [] 0)::acc))
+                else
+                  (ship_coordinates t ((create_horizontal_lst h [] 0)::acc))
 
 (* Creates a new "ship" Board of Unhit elements of length [len]. *)
 let create_ship len = Array.make len Unhit
@@ -183,14 +211,6 @@ let string_of_tuple tup =
   let x = fst tup in 
   let y = snd tup in
   "(" ^ string_of_int x ^ ", " ^ string_of_int y ^ ")"
-
-let give_hint matrix = 
-  for i = 0 to Array.length matrix do
-    if matrix.(i).(4) = Unhit then 
-      print_string ("\nThere is an unhit caml at " ^ string_of_tuple (i, 4) ^ "\n")
-    else
-      print_string "\nCouldn't Find Anything For You. Just Keep Firing!\n"
-  done
 
 let format_row (row: entry array) = 
   Array.iter (fun elem -> print_string (string_of_entry elem)) row;

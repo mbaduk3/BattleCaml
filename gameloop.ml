@@ -38,13 +38,15 @@ let in_phase = ref Menu
 let ship_i = ref 0
 let surrender = ref false
 
-(* let modes = [Gameboard.Easy; Gameboard.Medium; Gameboard.Hard]
+(* [modes] is a list of the possible modes *)
+let modes = [Gameboard.Easy; Gameboard.Medium; Gameboard.Hard]
 let mode_set = ref false
-
 let curr_mode = ref Medium
 
+(* [get_rnd_elt bound] is an integer between 0 (inclusive) and bound (exclusive) *)
 let get_rnd_elt bound = Random.int bound
 
+(* [set_mode ()] chooses the mode for the given play randomly *)
 let set_mode () = 
   if !mode_set = false then
     begin
@@ -53,7 +55,7 @@ let set_mode () =
       !curr_mode
     end
   else
-    !curr_mode *)
+    !curr_mode
 
 (* ship_coordinates is an array of tuples. Each tuple holds the x,y of the 
    upper-left coordinate of the ship, the length, and orientation *)
@@ -98,12 +100,6 @@ let handle_fire win b =
     | Already_miss m -> m 
     | Contact m -> incr_turn ();incr_score (); m
     | _ -> failwith "Unimplemented"
-
-(* let place_ship matrix ship_i x y = 
-   let ship_len = Array.length (List.nth ships ship_i) in 
-   for i = 0 to (ship_len - 1) do 
-    matrix.(y - 1).(x + i - 1) <- (List.nth ships ship_i).(i)
-   done *)
 
 (* Invert the orientation of the ship at index [ship] in the ships matrix *)
 let handle_rotate ships ship =
@@ -323,7 +319,7 @@ let init_ship_lst () =
   if !ship_lst_made = false then
     begin
     ship_lst_made := true;
-    ship_lst := ship_coordinates (Array.to_list ship_coordinates) [];
+    ship_lst := Gameboard.ship_coordinates (Array.to_list ship_coordinates) [];
     ship_lst
     end
   else
@@ -341,8 +337,11 @@ let init_empty_lst m =
 
 (* Blank for now *)
 let ai_fire opp_b = 
-  turn_count := !turn_count + 1; 
-  Ai_hard.ai_fire opp_b ship_lst (init_empty_lst opp_b)
+  turn_count := !turn_count + 1;
+  match set_mode () with
+    | Hard -> Ai_hard.ai_fire opp_b (init_ship_lst()) (init_empty_lst opp_b)
+    | Medium -> Ai_medium.ai_fire opp_b
+    | Easy -> Ai_easy.ai_fire opp_b
 
 (* Generates a random board with placed ships for the ai *)
 let ai_placement () =
@@ -401,7 +400,7 @@ let rec play_game b opp_b t =
         play_game b opp_b' t
     end
   | Play ->
-    begin
+      begin
       if (!turn_count mod 2 = 0) then
         let opp_b' = handle_input !Display.b_win opp_b in
         if (check_win opp_b') then 
@@ -420,7 +419,6 @@ let rec play_game b opp_b t =
       ignore(handle_input_menu !scr b);
       play_game (init_matrix ()) (powerup_placement easy_mode_powerups) t
     end
-
 
 let main () = 
   let dt = Sys.time () -. starttime in
