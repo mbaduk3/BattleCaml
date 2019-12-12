@@ -178,7 +178,6 @@ let format_row (row: entry array) =
   Array.iter (fun elem -> print_string (string_of_entry elem)) row;
   print_string "\n"
 
-(** [format board] prints the elements of Board [board] to the console *)
 let format (board:t) = 
   print_string "\n";
   Array.iter format_row board

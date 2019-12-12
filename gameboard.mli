@@ -56,6 +56,9 @@ val opp_ships : (entry array * orientation) array
     Entry [e]. *)
 val string_of_entry : entry -> string
 
+(** [string_of_response r] is the string description of response [r] *)
+val string_of_response : response -> string
+
 (** [new_mod n m] is n % m, handling negative numbers. 
     Requires: m is not 0. *)
 val new_mod : int -> int -> int
@@ -86,4 +89,7 @@ val fire : coord -> t -> response
 
 (** [string_of_tuple tup] is a string representation of tuple [tup]. *)
 val string_of_tuple : int * int -> string
+
+(** [format board] prints the elements of Board [board] to the console *)
+val format : t -> unit
 
