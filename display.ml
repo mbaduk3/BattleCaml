@@ -36,7 +36,7 @@ let collected_ch = int_of_char '+'
 let miss_ch = int_of_char '0'
 let unhit_ch = int_of_char '~'
 let empty_ch = int_of_char '.'
-let uncollected_ch = int_of_char 'o'
+let uncollected_ch = int_of_char '.'
 
 let blue = Curses.Color.blue
 let red = Curses.Color.red
